@@ -23,31 +23,12 @@ public class WordleClientMain {
             Socket socket = new Socket(ia, welcomePort);
             Scanner scanner = new Scanner(System.in);
             //inserire un comando 1...8
-            String menu = "Insert Command\n"+"1) register\n"+"2) login\n"+"3) logout\n"+"4) playWORDLE\n"+"5) sendWord\n"+"6) sendMeStatistics\n"+"7) share\n"+"8) showMeSharing\n";
-            System.out.println(menu);
-            int command = scanner.nextInt();
-            switch(command){
-                case 1:
-                    System.out.println("Username: \n");
-                    String username=scanner.nextLine();
-                    System.out.println("Password: \n");
-                    String password=scanner.nextLine();
-                    register(username,password);
-                    break;
-                case 2:
-                    System.out.println("Username: \n");
-                    username = scanner.nextLine();
-                    System.out.println("Password: \n");
-                    password=scanner.nextLine();
-                    login(username,password);
-                    break;
-                case 3:
-                    
-                default:
-                    break;
+            Scanner server = new Scanner(socket.getInputStream());
+            PrintWriter out = new PrintWriter(socket.getOutputStream(),true);
+            while(!socket.isClosed()){
+                System.out.println(server.next());
+                out.write(scanner.next());
             }
-            Scanner in = new Scanner(socket.getInputStream());
-            PrintWriter out = new PrintWriter(socket.getOutputStream());
         } catch (UnknownHostException e) {
             throw new RuntimeException(e);
         } catch (FileNotFoundException e) {
@@ -55,29 +36,5 @@ public class WordleClientMain {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static void register(String username, String password) {
-    }
-
-    public static void login(String username, String password) {
-    }
-
-    public static void logout(String username) {
-    }
-
-    public static void playWORDLE() {
-    }
-
-    public static void sendWord() {
-    }
-
-    public static void sendMeStatistics() {
-    }
-
-    public static void share() {
-    }
-
-    public static void showMeSharing() {
     }
 }
