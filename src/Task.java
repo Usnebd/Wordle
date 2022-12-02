@@ -78,8 +78,9 @@ public class Task implements Runnable{
             throw new RuntimeException(e);
         }
     }
-    public synchronized void register(String username, String password) {
-        while(){
+    public synchronized void register(String username, String password){
+        String s = fileObject.get("username").getAsString();
+        while(registered==0){
 
         }
     }
