@@ -1,8 +1,7 @@
 import com.google.gson.*;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import com.google.gson.stream.JsonWriter;
+
+import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
@@ -13,7 +12,16 @@ public class WordleServerMain {
     public static void main(String[] args){
         //Apro il file config.json
         try {
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            File datafile = new File("data.json");
+            if(!datafile.exists()){
+                datafile.createNewFile();
+                JsonWriter writer = new JsonWriter(new FileWriter(datafile));
+                writer.beginObject();
+                writer.beginArray();
+                writer.endArray();
+                writer.endObject();
+                writer.close();
+            }
             File file = new File("config.json");
             JsonElement fileElement = JsonParser.parseReader(new FileReader(file));
             JsonObject fileObject = fileElement.getAsJsonObject();

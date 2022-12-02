@@ -1,4 +1,13 @@
 {
-  "username": "pippo",
-
+  "UserData":
+  [
+    {
+      "username": "pippo",
+      "password": "cujsj2"
+    },
+    {
+      "username": "ciccio",
+      "password": "aajsaj2"
+    }
+  ]
 }

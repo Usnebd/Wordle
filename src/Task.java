@@ -1,6 +1,8 @@
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonWriter;
+
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
@@ -80,8 +82,11 @@ public class Task implements Runnable{
     }
     public synchronized void register(String username, String password){
         String s = fileObject.get("username").getAsString();
-        while(registered==0){
-
+        try {
+            JsonWriter writer = new JsonWriter(new FileWriter("data.json"));
+            JsonReader s
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
