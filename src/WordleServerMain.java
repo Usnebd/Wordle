@@ -1,7 +1,4 @@
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -15,9 +12,9 @@ import java.util.concurrent.Executors;
 public class WordleServerMain {
     public static void main(String[] args){
         //Apro il file config.json
-        Gson gson = new Gson();
-        File file = new File("config.json");
         try {
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            File file = new File("config.json");
             JsonElement fileElement = JsonParser.parseReader(new FileReader(file));
             JsonObject fileObject = fileElement.getAsJsonObject();
             //extracting basic fields

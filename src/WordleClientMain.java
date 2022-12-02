@@ -1,4 +1,3 @@
-import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -11,7 +10,6 @@ import java.util.Scanner;
 public class WordleClientMain {
     public static void main(String[] args) {
         try {
-            Gson gson = new Gson();
             File file = new File("config.json");
             JsonElement fileElement = JsonParser.parseReader(new FileReader(file));
             JsonObject fileObject = fileElement.getAsJsonObject();
@@ -21,6 +19,7 @@ public class WordleClientMain {
             int timeout = fileObject.getAsInt();
             //apro il file config.txt
             Socket socket = new Socket(ia, welcomePort);
+            socket.setSoTimeout(timeout);
             Scanner scanner = new Scanner(System.in);
             //inserire un comando 1...8
             Scanner server = new Scanner(socket.getInputStream());
