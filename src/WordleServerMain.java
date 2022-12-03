@@ -5,11 +5,13 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class WordleServerMain {
     public static void main(String[] args){
+        ConcurrentHashMap<String, Integer> hashmap = new ConcurrentHashMap<String, Integer>();
         //Apro il file config.json
         try {
             File datafile = new File("data.json");

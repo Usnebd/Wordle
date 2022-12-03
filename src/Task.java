@@ -1,29 +1,17 @@
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonWriter;
-
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Task implements Runnable{
     private Socket socket;
     private Scanner in;
     private PrintWriter out;
     private File file;
-    private JsonElement fileElement;
-    private JsonObject fileObject;
+    private ConcurrentHashMap hashMap;
 
     public Task(Socket socket){
-        try {
-            this.socket=socket;
-            this.file = new File("data.json");
-            this.fileElement = JsonParser.parseReader(new FileReader(file));
-            this.fileObject = fileElement.getAsJsonObject();
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+        this.socket=socket;
     }
     public void run() {
         try {
@@ -81,13 +69,7 @@ public class Task implements Runnable{
         }
     }
     public synchronized void register(String username, String password){
-        String s = fileObject.get("username").getAsString();
-        try {
-            JsonWriter writer = new JsonWriter(new FileWriter("data.json"));
-            JsonReader s
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        
     }
 
     public static void login(String username, String password) {
