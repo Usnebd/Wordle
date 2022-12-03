@@ -23,11 +23,16 @@ public class WordleClientMain {
             //inserire un comando 1...8
             Scanner in = new Scanner(socket.getInputStream());
             PrintWriter out = new PrintWriter(socket.getOutputStream(),true);
+            String received="null";
             while(!socket.isClosed()){
-                in.nextLine();
-                if(){
-                    out.println(scanner.nextLine());
+                while(!received.equals("eof")){
+                    received=in.nextLine();
+                    if(!received.equals("eof")){
+                        System.out.println(received);
+                    }
                 }
+                received="null";
+                out.println(scanner.nextLine());
             }
         } catch (UnknownHostException e) {
             throw new RuntimeException(e);
