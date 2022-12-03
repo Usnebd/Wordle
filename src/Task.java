@@ -24,27 +24,27 @@ public class Task implements Runnable{
             String username;
             String password;
             do{
-                out.write(menu);
-                command = in.nextInt();
+                out.println(menu);
+                command = Integer.parseInt(in.nextLine());
                 switch(command){
                     case 1:
-                        out.write("Insert Username");
+                        out.println("Insert Username");
                         username = in.nextLine();
-                        out.write("Insert Password");
+                        out.println("Insert Password");
                         password = in.nextLine();
-                        register(username,password);
+                        out.println(register(username,password));
                         break;
                     case 2:
-                        out.write("Insert Username");
+                        out.println("Insert Username");
                         username = in.nextLine();
-                        out.write("Insert Password");
+                        out.println("Insert Password");
                         password = in.nextLine();
                         login(username,password);
                         break;
                     case 3:
-                        out.write("Insert Username");
+                        out.println("Insert Username");
                         username = in.nextLine();
-                        logout(username);
+                        out.println(logout(username));
                         break;
                     case 4:
                         playWORDLE();
@@ -61,6 +61,9 @@ public class Task implements Runnable{
                     case 8:
                         showMeSharing();
                         break;
+                    default:
+                        out.println("Bad input, try again\n");
+                        break;
                 }
             }while(command != 3);
             in.close();
@@ -70,37 +73,40 @@ public class Task implements Runnable{
             throw new RuntimeException(e);
         }
     }
-    public synchronized void register(String username, String password){
-        UserData user = (UserData) hashMap.get(username);
-        if(user==null){
-            if(hashMap.putIfAbsent(username,new UserData(password))!=null){
-                out.write("Error, user "+username+" is already registered\n");
-            }else {
-                out.write("Success: Code 101");
-            }
+    public String register(String username, String password){
+        if(hashMap.putIfAbsent(username,new UserData(password))!=null){
+            return "Error, user "+username+" is already registered\n";
         }else{
-            out.write("Error, user "+username+" is already registered\n");
+            return "Success: Code 101\n";
         }
     }
 
-    public static void login(String username, String password) {
+    public String login(String username, String password) {
+        UserData userData = (UserData) hashMap.get(username);
+        if(password == userData.getPassword()){
+            return "Success\n";
+        }else{
+            return "Error, wrong credentials\n";
+        }
     }
 
-    public static void logout(String username) {
+    public String logout(String username) {
+       return "Logout done!\n";
     }
 
-    public static void playWORDLE() {
+    public void playWORDLE() {
     }
 
-    public static void sendWord() {
+    public void sendWord() {
+
     }
 
-    public static void sendMeStatistics() {
+    public void sendMeStatistics() {
     }
 
-    public static void share() {
+    public void share() {
     }
 
-    public static void showMeSharing() {
+    public void showMeSharing() {
     }
 }

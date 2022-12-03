@@ -10,23 +10,24 @@ import java.util.Scanner;
 public class WordleClientMain {
     public static void main(String[] args) {
         try {
-            File file = new File("config.json");
-            JsonElement fileElement = JsonParser.parseReader(new FileReader(file));
+            JsonElement fileElement = JsonParser.parseReader(new FileReader("src\\config.json"));
             JsonObject fileObject = fileElement.getAsJsonObject();
             //extracting basic fields
-            int welcomePort = fileObject.get("welcomePort").getAsInt();
-            InetAddress ia = InetAddress.getByName(fileObject.getAsString());
-            int timeout = fileObject.getAsInt();
+            int welcomePort = fileObject.get("server_port").getAsInt();
+            InetAddress ia = InetAddress.getByName(fileObject.get("server_hostname").getAsString());
+            int timeout = fileObject.get("timeout").getAsInt();
             //apro il file config.txt
             Socket socket = new Socket(ia, welcomePort);
             socket.setSoTimeout(timeout);
             Scanner scanner = new Scanner(System.in);
             //inserire un comando 1...8
-            Scanner server = new Scanner(socket.getInputStream());
+            Scanner in = new Scanner(socket.getInputStream());
             PrintWriter out = new PrintWriter(socket.getOutputStream(),true);
             while(!socket.isClosed()){
-                System.out.println(server.next());
-                out.write(scanner.next());
+                in.nextLine();
+                if(){
+                    out.println(scanner.nextLine());
+                }
             }
         } catch (UnknownHostException e) {
             throw new RuntimeException(e);

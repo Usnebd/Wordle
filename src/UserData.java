@@ -7,9 +7,6 @@ public class UserData {
     public UserData(String password){
         this.password=password;
     }
-    public void setPassword(String password){
-        this.password=password;
-    }
     public void setGamesWon(int gamesWon){
         this.gamesWon=gamesWon;
     }

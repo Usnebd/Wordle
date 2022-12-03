@@ -1,6 +1,4 @@
 import com.google.gson.*;
-import com.google.gson.stream.JsonWriter;
-
 import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -14,23 +12,12 @@ public class WordleServerMain {
         ConcurrentHashMap<String, UserData> hashMap = new ConcurrentHashMap<String, UserData>();
         //Apro il file config.json
         try {
-            File datafile = new File("data.json");
-            if(!datafile.exists()){
-                datafile.createNewFile();
-                JsonWriter writer = new JsonWriter(new FileWriter(datafile));
-                writer.beginObject();
-                writer.beginArray();
-                writer.endArray();
-                writer.endObject();
-                writer.close();
-            }
-            File file = new File("config.json");
-            JsonElement fileElement = JsonParser.parseReader(new FileReader(file));
+            JsonElement fileElement = JsonParser.parseReader(new FileReader("src\\config.json"));
             JsonObject fileObject = fileElement.getAsJsonObject();
             //extracting basic fields
-            int welcomePort = fileObject.get("welcomePort").getAsInt();
-            InetAddress ia = InetAddress.getByName(fileObject.getAsString());
-            int timeout = fileObject.getAsInt();
+            int welcomePort = fileObject.get("server_port").getAsInt();
+            InetAddress ia = InetAddress.getByName(fileObject.get("server_hostname").getAsString());
+            int timeout = fileObject.get("timeout").getAsInt();
             //creo un welcome socket sulla porta "welcomePort"
             ServerSocket serverSocket = new ServerSocket(welcomePort);
             //creo un ThreadPool per gestire gli utenti
