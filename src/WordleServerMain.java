@@ -11,7 +11,7 @@ import java.util.concurrent.Executors;
 
 public class WordleServerMain {
     public static void main(String[] args){
-        ConcurrentHashMap<String, Integer> hashmap = new ConcurrentHashMap<String, Integer>();
+        ConcurrentHashMap<String, UserData> hashMap = new ConcurrentHashMap<String, UserData>();
         //Apro il file config.json
         try {
             File datafile = new File("data.json");
@@ -37,7 +37,7 @@ public class WordleServerMain {
             ExecutorService service = Executors.newCachedThreadPool();
             while(true){
                 //accetto ogni richiesta di connessione e passo la task al threadpool
-                service.execute(new Task(serverSocket.accept()));
+                service.execute(new Task(hashMap,serverSocket.accept()));
             }
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);

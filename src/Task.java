@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.Socket;
+import java.util.Iterator;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -7,11 +8,12 @@ public class Task implements Runnable{
     private Socket socket;
     private Scanner in;
     private PrintWriter out;
-    private File file;
     private ConcurrentHashMap hashMap;
+    private Iterator<String> it;
 
-    public Task(Socket socket){
+    public Task(ConcurrentHashMap<String, UserData> hashMap,Socket socket){
         this.socket=socket;
+        this.hashMap=hashMap;
     }
     public void run() {
         try {
@@ -69,7 +71,16 @@ public class Task implements Runnable{
         }
     }
     public synchronized void register(String username, String password){
-        
+        UserData user = (UserData) hashMap.get(username);
+        if(user==null){
+            if(hashMap.putIfAbsent(username,new UserData(password))!=null){
+                out.write("Error, user "+username+" is already registered\n");
+            }else {
+                out.write("Success: Code 101");
+            }
+        }else{
+            out.write("Error, user "+username+" is already registered\n");
+        }
     }
 
     public static void login(String username, String password) {
