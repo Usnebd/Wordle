@@ -11,7 +11,6 @@ import java.util.Scanner;
 public class WordleClientMain {
     public static void main(String[] args) {
         try {
-            ArrayList notifications=new ArrayList();
             JsonElement fileElement = JsonParser.parseReader(new FileReader("src\\config.json"));
             JsonObject fileObject = fileElement.getAsJsonObject();
             //extracting basic fields
@@ -28,7 +27,7 @@ public class WordleClientMain {
             Scanner in = new Scanner(socket.getInputStream());
             PrintWriter out = new PrintWriter(socket.getOutputStream(),true);
             String received="null";
-            NotificationTask notificationTask = new NotificationTask(group, multicastPort,notifications);
+            NotificationTask notificationTask = new NotificationTask(group, multicastPort, notifications);
             Thread thread = new Thread (notificationTask);
             do{
                 received="null";
@@ -39,6 +38,7 @@ public class WordleClientMain {
                     }
                 }
                 if(!received.equals("Logout done!")){
+                    thread.start();
                     out.println(scanner.nextLine());
                     notificationTask.closeNotification();
                 }
