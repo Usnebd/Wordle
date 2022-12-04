@@ -24,16 +24,22 @@ public class WordleClientMain {
             Scanner in = new Scanner(socket.getInputStream());
             PrintWriter out = new PrintWriter(socket.getOutputStream(),true);
             String received="null";
-            while(!socket.isClosed()){
-                while(!received.equals("eof")){
+            Boolean exit=false;
+            do{
+                received="null";
+                while(!received.equals("eof") && !received.equals("Logout done!")){
                     received=in.nextLine();
                     if(!received.equals("eof")){
                         System.out.println(received);
                     }
                 }
-                received="null";
-                out.println(scanner.nextLine());
-            }
+                if(!received.equals("Logout done!")){
+                    out.println(scanner.nextLine());
+                }
+            }while(!socket.isClosed() && !received.equals("Logout done!"));
+            scanner.close();
+            out.close();
+            in.close();
         } catch (UnknownHostException e) {
             throw new RuntimeException(e);
         } catch (FileNotFoundException e) {
