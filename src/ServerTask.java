@@ -1,17 +1,19 @@
-import java.awt.*;
 import java.io.*;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Iterator;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Task implements Runnable{
+public class ServerTask implements Runnable{
     private Socket socket;
     private Scanner in;
     private PrintWriter out;
     private ConcurrentHashMap hashMap;
     private Iterator<String> it;
-    public Task(ConcurrentHashMap<String, UserData> hashMap,Socket socket){
+    public static InetAddress group;
+    public static int multicastPort;
+    public ServerTask(ConcurrentHashMap<String, UserData> hashMap, Socket socket){
         this.socket=socket;
         this.hashMap=hashMap;
     }

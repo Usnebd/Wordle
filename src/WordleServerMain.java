@@ -10,6 +10,8 @@ import java.util.concurrent.Executors;
 public class WordleServerMain {
     public static void main(String[] args){
         ConcurrentHashMap<String, UserData> hashMap = new ConcurrentHashMap<String, UserData>();
+        InetAddress group = null;
+        int multicastPort;
         //Apro il file config.json
         try {
             JsonElement fileElement = JsonParser.parseReader(new FileReader("src\\config.json"));
@@ -18,13 +20,17 @@ public class WordleServerMain {
             int welcomePort = fileObject.get("server_port").getAsInt();
             InetAddress ia = InetAddress.getByName(fileObject.get("server_hostname").getAsString());
             int timeout = fileObject.get("timeout").getAsInt();
+            group = InetAddress.getByName(fileObject.get("multicastAddress").getAsString());
+            multicastPort = fileObject.get("multicastPort").getAsInt();
+            ServerTask.multicastPort = multicastPort;
+            ServerTask.group = group;
             //creo un welcome socket sulla porta "welcomePort"
             ServerSocket serverSocket = new ServerSocket(welcomePort);
             //creo un ThreadPool per gestire gli utenti
             ExecutorService service = Executors.newCachedThreadPool();
             while(true){
                 //accetto ogni richiesta di connessione e passo la task al threadpool
-                service.execute(new Task(hashMap,serverSocket.accept()));
+                service.execute(new ServerTask(hashMap,serverSocket.accept()));
             }
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);

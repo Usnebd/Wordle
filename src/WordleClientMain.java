@@ -5,17 +5,21 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class WordleClientMain {
     public static void main(String[] args) {
         try {
+            ArrayList notifications=new ArrayList();
             JsonElement fileElement = JsonParser.parseReader(new FileReader("src\\config.json"));
             JsonObject fileObject = fileElement.getAsJsonObject();
             //extracting basic fields
             int welcomePort = fileObject.get("server_port").getAsInt();
             InetAddress ia = InetAddress.getByName(fileObject.get("server_hostname").getAsString());
             int timeout = fileObject.get("timeout").getAsInt();
+            InetAddress group = InetAddress.getByName(fileObject.get("multicastAddress").getAsString());
+            int multicastPort = fileObject.get("multicastPort").getAsInt();
             //apro il file config.txt
             Socket socket = new Socket(ia, welcomePort);
             socket.setSoTimeout(timeout);
@@ -24,7 +28,8 @@ public class WordleClientMain {
             Scanner in = new Scanner(socket.getInputStream());
             PrintWriter out = new PrintWriter(socket.getOutputStream(),true);
             String received="null";
-            Boolean exit=false;
+            NotificationTask notificationTask = new NotificationTask(group, multicastPort,notifications);
+            Thread thread = new Thread (notificationTask);
             do{
                 received="null";
                 while(!received.equals("eof") && !received.equals("Logout done!")){
@@ -35,6 +40,7 @@ public class WordleClientMain {
                 }
                 if(!received.equals("Logout done!")){
                     out.println(scanner.nextLine());
+                    notificationTask.closeNotification();
                 }
             }while(!socket.isClosed() && !received.equals("Logout done!"));
             scanner.close();
@@ -49,3 +55,5 @@ public class WordleClientMain {
         }
     }
 }
+
+
