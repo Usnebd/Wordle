@@ -4,5 +4,5 @@
   "timeout": 3000,
   "multicastAddress": "239.255.255.250",
   "multicastPort": 45588,
-  "secretWordTimeValidity": 600000
+  "secretWordRate": 10
 }
