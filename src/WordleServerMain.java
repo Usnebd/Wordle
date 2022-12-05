@@ -43,7 +43,7 @@ public class WordleServerMain {
             scheduler.scheduleAtFixedRate(secretWordTask,0, secretWordRate, TimeUnit.MINUTES);
             while(true){
                 //accetto ogni richiesta di connessione e passo la task al threadpool
-                service.execute(new ServerTask(hashMap,serverSocket.accept()));
+                service.execute(new ServerTask(hashMap,serverSocket.accept(),secretWord));
             }
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);

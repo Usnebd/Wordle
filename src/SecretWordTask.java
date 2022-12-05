@@ -19,6 +19,7 @@ public class SecretWordTask implements Runnable{
         int i=0;
         String secretWord;
         try {
+            bufferedReader.reset();
             do{
                 secretWord=bufferedReader.readLine();
                 i++;
@@ -30,8 +31,6 @@ public class SecretWordTask implements Runnable{
     }
 
     public void run() {
-        while(true){
-            secretWord[0]=findRandomWord();
-        }
+        secretWord[0]=findRandomWord();
     }
 }

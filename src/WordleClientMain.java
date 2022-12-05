@@ -32,9 +32,9 @@ public class WordleClientMain {
             Thread thread = new Thread (notificationTask);
             do{
                 received="null";
-                while(!received.equals("eof") && !received.equals("Logout done!")){
+                while(!received.equals("end") && !received.equals("Logout done!")){
                     received=in.nextLine();
-                    if(!received.equals("eof")){
+                    if(!received.equals("end")){
                         System.out.println(received);
                     }
                 }
