@@ -28,8 +28,9 @@ public class WordleClientMain {
             Scanner in = new Scanner(socket.getInputStream());
             PrintWriter out = new PrintWriter(socket.getOutputStream(),true);
             String received="null";
-            NotificationTask notificationTask = new NotificationTask(group, multicastPort, notifications);
+            NotificationTask notificationTask = new NotificationTask(group, multicastPort, notifications, timeout);
             Thread thread = new Thread (notificationTask);
+            thread.start();
             do{
                 received="null";
                 while(!received.equals("end") && !received.equals("Logout done!")){
@@ -39,11 +40,10 @@ public class WordleClientMain {
                     }
                 }
                 if(!received.equals("Logout done!")){
-                    thread.start();
                     out.println(scanner.nextLine());
-                    notificationTask.closeNotification();
                 }
             }while(!socket.isClosed() && !received.equals("Logout done!"));
+            thread.interrupt();
             scanner.close();
             out.close();
             in.close();

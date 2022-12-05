@@ -31,6 +31,7 @@ public class ServerTask implements Runnable{
             String startMenu="Insert Command\n"+"1) register\n"+"2) login\n";
             Boolean logged=false;
             Boolean registered=false;
+            Boolean logout=false;
             String username;
             String password;
             String command;
@@ -84,8 +85,8 @@ public class ServerTask implements Runnable{
                     command=in.nextLine();
                     switch(command){
                         case "1":
-                            logged=false;
                             out.println(logout());
+                            logout=true;
                             break;
                         case "2":
                             playWORDLE();
@@ -107,7 +108,7 @@ public class ServerTask implements Runnable{
                             break;
                     }
                 }
-            }while(!command.equals("3"));
+            }while(!logout);
             in.close();
             out.close();
             socket.close();
@@ -176,11 +177,16 @@ public class ServerTask implements Runnable{
                             for(int j=0;j<12;j++){
                                 if(secretWord[0].contains(String.valueOf(guessedWord.charAt(j)))){
                                     if(secretWord[0].charAt(j) == guessedWord.charAt(j)){
-
+                                        hints[i]=new String(hints[i].concat("+"));
+                                    }else{
+                                        hints[i]=new String(hints[i].concat("?"));
                                     }
                                 }else{
-
+                                    hints[i]=new String(hints[i].concat("X"));
                                 }
+                            }
+                            for(int k=0;k<i;k++){
+                                out.println(guessedWords[k]+"   "+hints[k]);
                             }
                         }
                     }

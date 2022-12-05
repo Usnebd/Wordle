@@ -28,14 +28,12 @@ public class WordleServerMain {
             //extracting basic fields
             int secretWordRate = fileObject.get("secretWordRate").getAsInt();
             int welcomePort = fileObject.get("server_port").getAsInt();
-            int timeout = fileObject.get("timeout").getAsInt();
             group = InetAddress.getByName(fileObject.get("multicastAddress").getAsString());
             multicastPort = fileObject.get("multicastPort").getAsInt();
             ServerTask.multicastPort = multicastPort;
             ServerTask.group = group;
             //creo un welcome socket sulla porta "welcomePort"
             ServerSocket serverSocket = new ServerSocket(welcomePort);
-            serverSocket.setSoTimeout(timeout);
             //creo un ThreadPool per gestire gli utenti e uno per estrarre la Secret Word casual periodicamente
             ExecutorService service = Executors.newCachedThreadPool();
             SecretWordTask secretWordTask = new SecretWordTask(random,bufferedReader,lines,secretWord);
