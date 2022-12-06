@@ -3,6 +3,8 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.SocketException;
+import java.nio.ByteBuffer;
+import java.nio.channels.DatagramChannel;
 import java.util.ArrayList;
 
 public class NotificationTask implements Runnable {
@@ -20,16 +22,19 @@ public class NotificationTask implements Runnable {
     public void run() {
         try {
             MulticastSocket ms = new MulticastSocket(multicastPort);
+            DatagramChannel channel = ms.getChannel();
+            channel.configureBlocking(false);
             ms.joinGroup(group);
-            byte[] buffer = new byte[8192];
-            ms.setSoTimeout(timeout);
+            int length;
+            ByteBuffer buffer = ByteBuffer.allocate(8192);
             while (!Thread.currentThread().isInterrupted()){
-                DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
-                try {
-                    ms.receive(dp);
-                } catch (IOException e) {}
-                String s = new String(dp.getData(), 0, dp.getLength());
-                notifications.add(s);
+                buffer.clear();
+                channel.read(buffer);
+                buffer.flip();
+                length=buffer.getInt();
+                byte[] notificationBytes = new byte[length];
+                buffer.get(notificationBytes);
+                notifications.add(new String(notificationBytes));
             }
             ms.leaveGroup(group);
             ms.close();

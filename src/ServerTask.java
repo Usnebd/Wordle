@@ -71,6 +71,7 @@ public class ServerTask implements Runnable{
                                 String result = login(username,password);
                                 if(result.equals("Logged successfully\n")){
                                     logged=true;
+                                    socket.getChannel();
                                 }
                                 out.println(result);
                             }

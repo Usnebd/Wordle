@@ -30,7 +30,6 @@ public class WordleClientMain {
             String received="null";
             NotificationTask notificationTask = new NotificationTask(group, multicastPort, notifications, timeout);
             Thread thread = new Thread (notificationTask);
-            thread.start();
             do{
                 received="null";
                 while(!received.equals("end") && !received.equals("Logout done!")){
