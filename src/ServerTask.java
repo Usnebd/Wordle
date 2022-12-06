@@ -1,32 +1,30 @@
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ServerTask implements Runnable{
     public static InetAddress group;
     public static int multicastPort;
-    private BufferedReader bufferedReader;
     private Socket socket;
     private Scanner in;
     private PrintWriter out;
     private ConcurrentHashMap hashMap;
-    private Iterator<String> it;
-    private String[] secretWord;
+    private ArrayList<String> words;
     private String lastSWplayed="null";
 
-    public ServerTask(ConcurrentHashMap<String, UserData> hashMap, Socket socket, String[] secretWord){
+    public ServerTask(ConcurrentHashMap<String, UserData> hashMap, Socket socket, ArrayList<String> words){
         this.socket=socket;
         this.hashMap=hashMap;
-        this.secretWord=secretWord;
+        this.words=words;
     }
 
     public void run() {
         try {
-            Scanner in = new Scanner(socket.getInputStream());
-            PrintWriter out = new PrintWriter(socket.getOutputStream(),true);
+            in = new Scanner(socket.getInputStream());
+            out = new PrintWriter(socket.getOutputStream(),true);
             String menu = "Insert Command\n"+"1) logout\n"+"2) playWORDLE\n"+"3) sendWord\n"+"4) sendMeStatistics\n"+"5) share\n"+"6) showMeSharing";
             String startMenu="Insert Command\n"+"1) register\n"+"2) login\n";
             Boolean logged=false;
@@ -52,7 +50,7 @@ public class ServerTask implements Runnable{
                                 out.println("end");
                                 password = in.nextLine();
                                 String result = register(username,password);
-                                if(result.equals("Registered successfully\n")){
+                                if(result.equals("Registered successfully!\n")){
                                     registered=true;
                                 }
                                 out.println(result);
@@ -69,9 +67,8 @@ public class ServerTask implements Runnable{
                                 out.println("end");
                                 password = in.nextLine();
                                 String result = login(username,password);
-                                if(result.equals("Logged successfully\n")){
+                                if(result.equals("Logged successfully!\n")){
                                     logged=true;
-                                    socket.getChannel();
                                 }
                                 out.println(result);
                             }
@@ -122,14 +119,18 @@ public class ServerTask implements Runnable{
         if(hashMap.putIfAbsent(username,new UserData(password))!=null){
             return "Error, user "+username+" is already registered\n";
         }else{
-            return "Registered successfully\n";
+            return "Registered successfully!\n";
         }
     }
 
     public String login(String username, String password) {
-        UserData userData = (UserData) hashMap.get(username);
-        if(password.equals(userData.getPassword())){
-            return "Logged successfully\n";
+        if(hashMap.get(username)!=null){
+            UserData userData = (UserData) hashMap.get(username);
+            if(password.equals(userData.getPassword())){
+                return "Logged successfully!\n";
+            }else{
+                return "Error, wrong credentials\n";
+            }
         }else{
             return "Error, wrong credentials\n";
         }
@@ -140,64 +141,76 @@ public class ServerTask implements Runnable{
     }
 
     public void playWORDLE() {
-        if(!lastSWplayed.equals(secretWord[0])){
-            FileReader fileReader = null;
+        String secretWord=WordleServerMain.getSecretWord();
+        if(!lastSWplayed.equals(secretWord)){
             String guessedWord = null;
-            String[] guessedWords = new String[12];
-            String[] hints = new String[12];
-            String aux = null;
-            Boolean isWord=false;
+            ArrayList<String> guessedWords = new ArrayList<String>(12);
+            ArrayList<String> hints = new ArrayList<String>(12);
             Boolean won=false;
-            try {
-                fileReader = new FileReader("src\\words.txt");
-                BufferedReader bufferedReader = new BufferedReader(fileReader);
-                out.println("Ready, you can play Wordle!");
-                for(int i=0;i<12;i++){
-                    if(!won){
+            out.println("Ready, you can play Wordle!");
+            for(int i=0;i<12;i++){
+                if(!won){
+                    do{
                         out.println("Guess the word");
                         out.println("end");
-                        bufferedReader.reset();
-                        while(!isWord){
-                            guessedWord=in.nextLine();
-                            do{
-                                aux=bufferedReader.readLine();
-                                if(guessedWord.equals(aux)){
-                                    isWord=true;
+                        guessedWord=in.nextLine();
+                        if(!words.contains(guessedWord)){
+                            out.println("Error, not a playable word!");
+                            if(i>0){
+                                for(int z=0;z<i;z++){
+                                    out.println(guessedWords.get(z).toUpperCase()+"   "+hints.get(z).toUpperCase());
                                 }
-                            }while(aux!=null);
-                            if(!isWord){
-                                out.println("Error, not a playable word!");
-                                out.println("end");
                             }
                         }
-                        if (guessedWord.equals(secretWord[0])){
-                            won=true;
-                            out.println("CONGRATULATIONS, YOU WON!");
-                        }else{
-                            guessedWords[i]=guessedWord;
-                            for(int j=0;j<12;j++){
-                                if(secretWord[0].contains(String.valueOf(guessedWord.charAt(j)))){
-                                    if(secretWord[0].charAt(j) == guessedWord.charAt(j)){
-                                        hints[i]=new String(hints[i].concat("+"));
-                                    }else{
-                                        hints[i]=new String(hints[i].concat("?"));
-                                    }
-                                }else{
-                                    hints[i]=new String(hints[i].concat("X"));
+                        if(guessedWords.contains(guessedWord)){
+                            out.println("Error, word is already played!");
+                            if(i>0){
+                                for(int y=0;y<i;y++){
+                                    out.println(guessedWords.get(y).toUpperCase()+"   "+hints.get(y).toUpperCase());
                                 }
                             }
-                            for(int k=0;k<i;k++){
-                                out.println(guessedWords[k]+"   "+hints[k]);
+                        }
+                    }while(!words.contains(guessedWord) || guessedWords.contains(guessedWord));
+                    if(guessedWord.equals(secretWord)){
+                        won=true;
+                        out.println("CONGRATULATIONS, YOU WON!");
+                    }else{
+                        guessedWords.add(i,guessedWord);
+                        String hint=null;
+                        for(int j=0;j<10;j++){
+                            if(secretWord.contains(String.valueOf(guessedWord.charAt(j)))){
+                                if(secretWord.charAt(j) == guessedWord.charAt(j)){
+                                    if(hint!=null){
+                                        hint = new String(hint.concat("+"));
+                                    }else{
+                                        hint = "?";
+                                    }
+                                }else{
+                                    if(hint!=null){
+                                        hint = new String(hint.concat("?"));
+                                    }else{
+                                        hint = "?";
+                                    }
+                                }
+                            }else{
+                                if(hint!=null){
+                                    hint = new String(hint.concat("X"));
+                                }else{
+                                    hint = "X";
+                                }
                             }
+                        }
+                        hints.add(hint);
+                        for(int k=0;k<=i;k++){
+                            out.println(guessedWords.get(k).toUpperCase()+"   "+hints.get(k).toUpperCase());
                         }
                     }
                 }
-                lastSWplayed=secretWord[0];
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
+            if(!won){
+                out.println("Sorry, you've lost the match!");
+            }
+            lastSWplayed=secretWord;
         }else{
             out.println("Error, you have already played");
             out.println("Wait for the next Secret Word to be selected");

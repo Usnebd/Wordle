@@ -1,10 +1,8 @@
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.SocketException;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
+import java.nio.channels.MulticastChannel;
 import java.util.ArrayList;
 
 public class NotificationTask implements Runnable {
@@ -22,20 +20,21 @@ public class NotificationTask implements Runnable {
     public void run() {
         try {
             MulticastSocket ms = new MulticastSocket(multicastPort);
-            DatagramChannel channel = ms.getChannel();
-            channel.configureBlocking(false);
             ms.joinGroup(group);
-            int length;
-            ByteBuffer buffer = ByteBuffer.allocate(8192);
+            byte[] buffer = new byte[8192];
+            ms.setSoTimeout(timeout);
             while (!Thread.currentThread().isInterrupted()){
-                buffer.clear();
-                channel.read(buffer);
-                buffer.flip();
-                length=buffer.getInt();
-                byte[] notificationBytes = new byte[length];
-                buffer.get(notificationBytes);
-                notifications.add(new String(notificationBytes));
+                DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
+                try {
+                    ms.receive(dp);
+                } catch (SocketTimeoutException ignore) {}
+                if(dp.getData().length==0){
+
+                }
+                String s = new String(dp.getData(), 0, dp.getLength());
+                notifications.add(s);
             }
+            System.out.println("Notification thread shutted down!");
             ms.leaveGroup(group);
             ms.close();
         } catch (SocketException e) {
