@@ -1,36 +1,27 @@
+import java.util.ArrayList;
+
 public class UserData {
     private String password=null;
-    private int gamesWon=0;
-    private int lastStreak=0;
-    private int maxStreak=0;
-    private int guessDistribution=0;
-
+    private ArrayList<Boolean> matchesResults;
+    private int guesses;
     public UserData(String password){
         this.password=password;
+        matchesResults = new ArrayList<Boolean>();
     }
-    public void setGamesWon(int gamesWon){
-        this.gamesWon=gamesWon;
+
+    public void addMatch(Boolean result){
+        matchesResults.add(result);
     }
-    public void setLastStreak(int lastStreak){
-        this.lastStreak=lastStreak;
-    }
-    public void setMaxStreak(int maxStreak){
-        this.maxStreak=maxStreak;
-    }
-    public void setGuessDistribution(int guessDistribution){this.guessDistribution=guessDistribution;}
     public String getPassword(){
         return password;
     }
-    public int getGamesWon(){
-        return gamesWon;
+    public ArrayList<Boolean> getMatchesResults(){
+        return matchesResults;
     }
-    public int getLastStreak(){
-        return lastStreak;
+    public void incrementGuesses(){
+        guesses++;
     }
-    public int getMaxStreak(){
-        return maxStreak;
-    }
-    public int getGuessDistribution(){
-        return guessDistribution;
+    public int getGuesses() {
+        return guesses;
     }
 }

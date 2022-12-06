@@ -1,6 +1,5 @@
 import java.io.*;
-import java.net.InetAddress;
-import java.net.Socket;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
@@ -8,14 +7,15 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ServerTask implements Runnable{
     public static InetAddress group;
     public static int multicastPort;
+    public static ArrayList<String> notificationsSent = new ArrayList<>();
+    private UserData user;
     private Socket socket;
     private Scanner in;
     private PrintWriter out;
-    private ConcurrentHashMap hashMap;
+    private ConcurrentHashMap<String, UserData> hashMap;
     private ArrayList<String> words;
     private String lastSWplayed="null";
     private String secretWord=WordleServerMain.getSecretWord();
-    private int round=-1;
     private ArrayList<String> guessedWords = new ArrayList<String>(12);
     private ArrayList<String> hints = new ArrayList<String>(12);
     public ServerTask(ConcurrentHashMap<String, UserData> hashMap, Socket socket, ArrayList<String> words){
@@ -33,9 +33,10 @@ public class ServerTask implements Runnable{
             Boolean logged=false;
             Boolean registered=false;
             Boolean logout=false;
-            String username;
+            String username = null;
             String password;
             String command;
+            int round=-1;
             do{
                 if(logged==false){
                     out.println(startMenu);
@@ -90,16 +91,16 @@ public class ServerTask implements Runnable{
                             logout=true;
                             break;
                         case "2":
-                            playWORDLE();
+                            playWORDLE(round);
                             break;
                         case "3":
-                            sendWord();
+                            sendWord(round);
                             break;
                         case "4":
                             sendMeStatistics();
                             break;
                         case "5":
-                            share();
+                            share(username);
                             break;
                         case "6":
                             showMeSharing();
@@ -128,8 +129,7 @@ public class ServerTask implements Runnable{
 
     public String login(String username, String password) {
         if(hashMap.get(username)!=null){
-            UserData userData = (UserData) hashMap.get(username);
-            if(password.equals(userData.getPassword())){
+            if(password.equals(hashMap.get(username).getPassword())){
                 return "Logged successfully!\n";
             }else{
                 return "Error, wrong credentials\n";
@@ -143,7 +143,7 @@ public class ServerTask implements Runnable{
        return "Logout done!";
     }
 
-    public void playWORDLE(){
+    public void playWORDLE(int round){
         secretWord=WordleServerMain.getSecretWord();
         System.out.println(secretWord);
         if(lastSWplayed==secretWord){
@@ -158,7 +158,7 @@ public class ServerTask implements Runnable{
         }
     }
 
-    public void sendWord() {
+    public void sendWord(int round) {
         if (round >= 0 && round < 12) {
             String guessedWord = null;
             out.println("Guess the word");
@@ -170,12 +170,15 @@ public class ServerTask implements Runnable{
                 out.println("Error, word has been already played!");
             } else {
                 if (guessedWord.equals(secretWord)) {
+                    user.incrementGuesses();
+                    user.addMatch(true);
                     lastSWplayed = secretWord;
                     round = -1;
                     guessedWords.clear();
                     hints.clear();
                     out.println("CONGRATULATIONS, YOU WON!");
                 } else {
+                    user.incrementGuesses();
                     out.println("Word is in the vocabulary");
                     String hint = null;
                     for(int k=0;k<10; k++){
@@ -209,14 +212,74 @@ public class ServerTask implements Runnable{
                 }
                 round++;
             }
+        }else if(round==12){
+            user.addMatch(false);
+            lastSWplayed = secretWord;
+            round = -1;
+            guessedWords.clear();
+            hints.clear();
+            out.println("You lost!");
         }
     }
-    public void sendMeStatistics() {
+
+    public void sendMeStatistics(){
+        ArrayList<Boolean> matchesResults = user.getMatchesResults();
+        int gamesWon=0;
+        int lastStreak=0;
+        int aux=0;
+        Boolean exit=false;
+        int maxStreak=0;
+        int guessDistribution= user.getGuesses();
+        int matchesPlayed=matchesResults.size();
+        for(Boolean bool: matchesResults){
+            if(bool==true){
+                gamesWon++;
+                aux++;
+                if(aux>maxStreak){
+                    maxStreak=aux;
+                }
+            }else{
+                aux=0;
+            }
+        }
+        for(int i=matchesPlayed-1;i>=0;i--){
+            if(!exit){
+                if(matchesResults.get(i)==true){
+                    lastStreak++;
+                }else{
+                    exit=true;
+                }
+            }
+        }
+        guessDistribution=guessDistribution/matchesPlayed;
+        gamesWon=(matchesPlayed/100)*gamesWon;
+        out.println("Played matches: "+matchesPlayed+"\n");
+        out.println("Games Won: "+gamesWon+"%\n");
+        out.println("Max Streak: "+maxStreak+"\n");
+        out.println("Max Streak: "+maxStreak+"\n");
+        out.println("Guess Distribution: "+guessDistribution+"\n");
     }
 
-    public void share() {
+    public void share(String username) {
+        try {
+            DatagramSocket socket = new DatagramSocket();
+            String s = new String("User: "+username+" has won!");
+            DatagramPacket request = new DatagramPacket(s.getBytes(), s.length(), group, multicastPort);
+            socket.send(request);
+            synchronized (notificationsSent){
+                notificationsSent.add(s);
+            }
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        } catch (SocketException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
-
-    public void showMeSharing() {
+    public void showMeSharing(){
+        for(String s: notificationsSent){
+            out.println(s);
+        }
     }
 }
