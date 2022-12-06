@@ -14,7 +14,10 @@ public class ServerTask implements Runnable{
     private ConcurrentHashMap hashMap;
     private ArrayList<String> words;
     private String lastSWplayed="null";
-
+    private String secretWord=WordleServerMain.getSecretWord();
+    private int round=-1;
+    private ArrayList<String> guessedWords = new ArrayList<String>(12);
+    private ArrayList<String> hints = new ArrayList<String>(12);
     public ServerTask(ConcurrentHashMap<String, UserData> hashMap, Socket socket, ArrayList<String> words){
         this.socket=socket;
         this.hashMap=hashMap;
@@ -140,87 +143,74 @@ public class ServerTask implements Runnable{
        return "Logout done!";
     }
 
-    public void playWORDLE() {
-        String secretWord=WordleServerMain.getSecretWord();
-        if(!lastSWplayed.equals(secretWord)){
-            String guessedWord = null;
-            ArrayList<String> guessedWords = new ArrayList<String>(12);
-            ArrayList<String> hints = new ArrayList<String>(12);
-            Boolean won=false;
-            out.println("Ready, you can play Wordle!");
-            for(int i=0;i<12;i++){
-                if(!won){
-                    do{
-                        out.println("Guess the word");
-                        out.println("end");
-                        guessedWord=in.nextLine();
-                        if(!words.contains(guessedWord)){
-                            out.println("Error, not a playable word!");
-                            if(i>0){
-                                for(int z=0;z<i;z++){
-                                    out.println(guessedWords.get(z).toUpperCase()+"   "+hints.get(z).toUpperCase());
-                                }
-                            }
-                        }
-                        if(guessedWords.contains(guessedWord)){
-                            out.println("Error, word is already played!");
-                            if(i>0){
-                                for(int y=0;y<i;y++){
-                                    out.println(guessedWords.get(y).toUpperCase()+"   "+hints.get(y).toUpperCase());
-                                }
-                            }
-                        }
-                    }while(!words.contains(guessedWord) || guessedWords.contains(guessedWord));
-                    if(guessedWord.equals(secretWord)){
-                        won=true;
-                        out.println("CONGRATULATIONS, YOU WON!");
-                    }else{
-                        guessedWords.add(i,guessedWord);
-                        String hint=null;
-                        for(int j=0;j<10;j++){
-                            if(secretWord.contains(String.valueOf(guessedWord.charAt(j)))){
-                                if(secretWord.charAt(j) == guessedWord.charAt(j)){
-                                    if(hint!=null){
-                                        hint = new String(hint.concat("+"));
-                                    }else{
-                                        hint = "?";
-                                    }
-                                }else{
-                                    if(hint!=null){
-                                        hint = new String(hint.concat("?"));
-                                    }else{
-                                        hint = "?";
-                                    }
-                                }
-                            }else{
-                                if(hint!=null){
-                                    hint = new String(hint.concat("X"));
-                                }else{
-                                    hint = "X";
-                                }
-                            }
-                        }
-                        hints.add(hint);
-                        for(int k=0;k<=i;k++){
-                            out.println(guessedWords.get(k).toUpperCase()+"   "+hints.get(k).toUpperCase());
-                        }
-                    }
-                }
-            }
-            if(!won){
-                out.println("Sorry, you've lost the match!");
-            }
-            lastSWplayed=secretWord;
-        }else{
+    public void playWORDLE(){
+        secretWord=WordleServerMain.getSecretWord();
+        System.out.println(secretWord);
+        if(lastSWplayed==secretWord){
             out.println("Error, you have already played");
             out.println("Wait for the next Secret Word to be selected");
+        }
+        else if(round==-1){
+            round=0;
+            out.println("Ready, you can play Wordle!");
+        }else {
+            out.println("Error, you are already playing!");
         }
     }
 
     public void sendWord() {
-
+        if (round >= 0 && round < 12) {
+            String guessedWord = null;
+            out.println("Guess the word");
+            out.println("end");
+            guessedWord = in.nextLine();
+            if (!words.contains(guessedWord)) {
+                out.println("Error, not a playable word!");
+            } else if (guessedWords.contains(guessedWord)) {
+                out.println("Error, word has been already played!");
+            } else {
+                if (guessedWord.equals(secretWord)) {
+                    lastSWplayed = secretWord;
+                    round = -1;
+                    guessedWords.clear();
+                    hints.clear();
+                    out.println("CONGRATULATIONS, YOU WON!");
+                } else {
+                    out.println("Word is in the vocabulary");
+                    String hint = null;
+                    for(int k=0;k<10; k++){
+                        if (secretWord.contains(String.valueOf(guessedWord.charAt(k)))) {
+                            if (secretWord.charAt(k) == guessedWord.charAt(k)) {
+                                if (hint != null) {
+                                    hint = new String(hint.concat("+"));
+                                } else {
+                                    hint = "?";
+                                }
+                            } else {
+                                if (hint != null) {
+                                    hint = new String(hint.concat("?"));
+                                } else {
+                                    hint = "?";
+                                }
+                            }
+                        } else {
+                            if (hint != null) {
+                                hint = new String(hint.concat("X"));
+                            } else {
+                                hint = "X";
+                            }
+                        }
+                    }
+                    guessedWords.add(round, guessedWord);
+                    hints.add(hint);
+                    for (int j = 0; j <= round; j++) {
+                        out.println(guessedWords.get(j).toUpperCase() + "   Hint: " + hints.get(j).toUpperCase());
+                    }
+                }
+                round++;
+            }
+        }
     }
-
     public void sendMeStatistics() {
     }
 
