@@ -16,7 +16,7 @@ public class ServerTask implements Runnable{
     private ArrayList<String> words;
     private int round=-1;
     private String lastSWplayed="null";
-    private String secretWord=WordleServerMain.getSecretWord();
+    private String secretWord=WordleServer.getSecretWord();
     private ArrayList<String> guessedWords = new ArrayList<String>(12);
     private ArrayList<String> hints = new ArrayList<String>(12);
     public ServerTask(ConcurrentHashMap<String, UserData> hashMap, Socket socket, ArrayList<String> words){
@@ -144,8 +144,7 @@ public class ServerTask implements Runnable{
     }
 
     public void playWORDLE(){
-        secretWord=WordleServerMain.getSecretWord();
-        System.out.println(secretWord);
+        secretWord=WordleServer.getSecretWord();
         if(lastSWplayed==secretWord){
             out.println("Error, you have already played");
             out.println("Wait for the next Secret Word to be selected");
