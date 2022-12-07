@@ -30,31 +30,31 @@ public class WordleClientMain {
             Scanner in = new Scanner(socket.getInputStream());
             PrintWriter out = new PrintWriter(socket.getOutputStream(),true);
             String received="null";
+            ClientSocketHandler clientSocketHandler = new ClientSocketHandler(socket);
             NotificationTask notificationTask = new NotificationTask(group, multicastPort, notifications, timeout);
-            Thread thread = new Thread (notificationTask);
-            thread.start();
+            Thread notificationThread = new Thread (notificationTask);
+            Thread socketThread = new Thread(clientSocketHandler);
+            socketThread.start();
+            notificationThread.start();
             do{
                 received="null";
                 while(!received.equals("end") && !received.equals("Logout done!")){
-                    if(!socket.isClosed()){
-                        try {
-                            received=in.nextLine();
-                        } catch (NoSuchElementException e) {
-                            System.out.println("Error, socket may be closed\n");
-                        }
-                        if(!received.equals("end")){
-                            System.out.println(received);
-                        }
-                    }else{
-                        received="end";
+                    try {
+                        received=in.nextLine();
+                    } catch (NoSuchElementException ignore) {
+                        received = "Logout done!";
+                    }
+                    if(!received.equals("end")){
+                        System.out.println(received);
                     }
                 }
                 if(!received.equals("Logout done!")){
                     out.println(scanner.nextLine());
                 }
-            }while(!socket.isClosed() && !received.equals("Logout done!"));
-            thread.interrupt();
-            System.out.println("Notification thread is shutting down....");
+            }while(!received.equals("Logout done!"));
+            System.out.println("Client is shutting down....");
+            socketThread.interrupt();
+            notificationThread.interrupt();
             scanner.close();
             out.close();
             in.close();

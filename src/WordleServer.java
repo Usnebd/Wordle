@@ -44,15 +44,12 @@ public class WordleServer implements Runnable{
                     service.execute(new ServerTask(hashMap,client,words));
                 } catch (IOException ignore) {}
             }
+
             serverSocket.close();
             scheduledSwService.shutdown();
             service.shutdown();
             for(Socket client:connections){
                 client.close();
-            }
-            if(!service.awaitTermination(2000,TimeUnit.MILLISECONDS)&&!scheduledSwService.awaitTermination(2000,TimeUnit.MILLISECONDS)){
-                service.shutdownNow();
-                scheduledSwService.shutdownNow();
             }
         } catch (SocketException e) {
             throw new RuntimeException(e);
@@ -61,8 +58,6 @@ public class WordleServer implements Runnable{
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
@@ -93,5 +88,8 @@ public class WordleServer implements Runnable{
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+    public static void saveData(){
+
     }
 }
