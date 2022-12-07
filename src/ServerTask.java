@@ -19,6 +19,7 @@ public class ServerTask implements Runnable{
     private String secretWord=WordleServer.getSecretWord();
     private ArrayList<String> guessedWords = new ArrayList<String>(12);
     private ArrayList<String> hints = new ArrayList<String>(12);
+
     public ServerTask(ConcurrentHashMap<String, UserData> hashMap, Socket socket, ArrayList<String> words){
         this.socket=socket;
         this.hashMap=hashMap;

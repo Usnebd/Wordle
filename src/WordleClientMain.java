@@ -4,8 +4,10 @@ import com.google.gson.JsonParser;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class WordleClientMain {
@@ -34,9 +36,17 @@ public class WordleClientMain {
             do{
                 received="null";
                 while(!received.equals("end") && !received.equals("Logout done!")){
-                    received=in.nextLine();
-                    if(!received.equals("end")){
-                        System.out.println(received);
+                    if(!socket.isClosed()){
+                        try {
+                            received=in.nextLine();
+                        } catch (NoSuchElementException e) {
+                            System.out.println("Error, socket may be closed\n");
+                        }
+                        if(!received.equals("end")){
+                            System.out.println(received);
+                        }
+                    }else{
+                        received="end";
                     }
                 }
                 if(!received.equals("Logout done!")){
@@ -48,6 +58,8 @@ public class WordleClientMain {
             scanner.close();
             out.close();
             in.close();
+        } catch (SocketException e) {
+            throw new RuntimeException(e);
         } catch (UnknownHostException e) {
             throw new RuntimeException(e);
         } catch (FileNotFoundException e) {
