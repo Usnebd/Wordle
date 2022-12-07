@@ -153,6 +153,8 @@ public class ServerTask implements Runnable{
         else{
             if(round==-1){
                 round=0;
+                guessedWords.clear();
+                hints.clear();
                 out.println("Ready, you can play Wordle!");
             }else {
                 out.println("Error, you are already playing!");
@@ -173,11 +175,11 @@ public class ServerTask implements Runnable{
             } else {
                 if (guessedWord.equals(secretWord)) {
                     user.incrementGuesses();
+                    hints.add("++++++++++");
+                    guessedWords.add(guessedWord);
                     user.addMatch(true);
                     lastSWplayed = secretWord;
                     round = -1;
-                    guessedWords.clear();
-                    hints.clear();
                     out.println("CONGRATULATIONS, YOU WON!");
                 } else {
                     user.incrementGuesses();
@@ -212,15 +214,14 @@ public class ServerTask implements Runnable{
                         out.println(guessedWords.get(j).toUpperCase() + "   Hint: " + hints.get(j).toUpperCase());
                     }
                     round++;
+                    if(round==12){
+                        user.addMatch(false);
+                        lastSWplayed = secretWord;
+                        round = -1;
+                        out.println("You lost!");
+                    }
                 }
             }
-        }else if(round==12){
-            user.addMatch(false);
-            lastSWplayed = secretWord;
-            round = -1;
-            guessedWords.clear();
-            hints.clear();
-            out.println("You lost!");
         }else{
             out.println("You have to start the game in order to play!");
         }
@@ -271,7 +272,10 @@ public class ServerTask implements Runnable{
     public void share(String username) {
         try {
             DatagramSocket socket = new DatagramSocket();
-            String s = new String("User: "+username+" has won!");
+            String s="WORDLE "+user.getMatchesResults().size()+": "+guessedWords.size()+"/12\n\n";
+            for(String hint:hints){
+                s=s.concat(hint.concat("\n"));
+            }
             DatagramPacket request = new DatagramPacket(s.getBytes(), s.length(), group, multicastPort);
             socket.send(request);
             out.println("SHARED");
