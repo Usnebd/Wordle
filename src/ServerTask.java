@@ -14,6 +14,7 @@ public class ServerTask implements Runnable{
     private PrintWriter out;
     private ConcurrentHashMap<String, UserData> hashMap;
     private ArrayList<String> words;
+    private int round=-1;
     private String lastSWplayed="null";
     private String secretWord=WordleServerMain.getSecretWord();
     private ArrayList<String> guessedWords = new ArrayList<String>(12);
@@ -36,7 +37,6 @@ public class ServerTask implements Runnable{
             String username = null;
             String password;
             String command;
-            int round=-1;
             do{
                 if(logged==false){
                     out.println(startMenu);
@@ -91,10 +91,10 @@ public class ServerTask implements Runnable{
                             logout=true;
                             break;
                         case "2":
-                            playWORDLE(round);
+                            playWORDLE();
                             break;
                         case "3":
-                            sendWord(round);
+                            sendWord();
                             break;
                         case "4":
                             sendMeStatistics();
@@ -128,12 +128,12 @@ public class ServerTask implements Runnable{
     }
 
     public String login(String username, String password) {
-        if(hashMap.get(username)!=null){
-            if(password.equals(hashMap.get(username).getPassword())){
-                return "Logged successfully!\n";
-            }else{
-                return "Error, wrong credentials\n";
-            }
+        user=hashMap.get(username);
+        if(user==null){
+            return "User not registered\n";
+        }
+        else if(password.equals(hashMap.get(username).getPassword())){
+            return "Logged successfully!\n";
         }else{
             return "Error, wrong credentials\n";
         }
@@ -143,22 +143,24 @@ public class ServerTask implements Runnable{
        return "Logout done!";
     }
 
-    public void playWORDLE(int round){
+    public void playWORDLE(){
         secretWord=WordleServerMain.getSecretWord();
         System.out.println(secretWord);
         if(lastSWplayed==secretWord){
             out.println("Error, you have already played");
             out.println("Wait for the next Secret Word to be selected");
         }
-        else if(round==-1){
-            round=0;
-            out.println("Ready, you can play Wordle!");
-        }else {
-            out.println("Error, you are already playing!");
+        else{
+            if(round==-1){
+                round=0;
+                out.println("Ready, you can play Wordle!");
+            }else {
+                out.println("Error, you are already playing!");
+            }
         }
     }
 
-    public void sendWord(int round) {
+    public void sendWord() {
         if (round >= 0 && round < 12) {
             String guessedWord = null;
             out.println("Guess the word");
@@ -209,8 +211,8 @@ public class ServerTask implements Runnable{
                     for (int j = 0; j <= round; j++) {
                         out.println(guessedWords.get(j).toUpperCase() + "   Hint: " + hints.get(j).toUpperCase());
                     }
+                    round++;
                 }
-                round++;
             }
         }else if(round==12){
             user.addMatch(false);
@@ -219,45 +221,51 @@ public class ServerTask implements Runnable{
             guessedWords.clear();
             hints.clear();
             out.println("You lost!");
+        }else{
+            out.println("You have to start the game in order to play!");
         }
     }
 
     public void sendMeStatistics(){
-        ArrayList<Boolean> matchesResults = user.getMatchesResults();
-        int gamesWon=0;
-        int lastStreak=0;
-        int aux=0;
-        Boolean exit=false;
-        int maxStreak=0;
-        int guessDistribution= user.getGuesses();
-        int matchesPlayed=matchesResults.size();
-        for(Boolean bool: matchesResults){
-            if(bool==true){
-                gamesWon++;
-                aux++;
-                if(aux>maxStreak){
-                    maxStreak=aux;
-                }
-            }else{
-                aux=0;
-            }
-        }
-        for(int i=matchesPlayed-1;i>=0;i--){
-            if(!exit){
-                if(matchesResults.get(i)==true){
-                    lastStreak++;
+        if(lastSWplayed=="null"){
+           out.println("Error, you have completed no games");
+        }else{
+            ArrayList<Boolean> matchesResults = user.getMatchesResults();
+            int gamesWon=0;
+            int lastStreak=0;
+            int aux=0;
+            Boolean exit=false;
+            int maxStreak=0;
+            int guessDistribution= user.getGuesses();
+            int matchesPlayed=matchesResults.size();
+            for(Boolean bool: matchesResults){
+                if(bool==true){
+                    gamesWon++;
+                    aux++;
+                    if(aux>maxStreak){
+                        maxStreak=aux;
+                    }
                 }else{
-                    exit=true;
+                    aux=0;
                 }
             }
+            for(int i=matchesPlayed-1;i>=0;i--){
+                if(!exit){
+                    if(matchesResults.get(i)==true){
+                        lastStreak++;
+                    }else{
+                        exit=true;
+                    }
+                }
+            }
+            guessDistribution=guessDistribution/matchesPlayed;
+            gamesWon=(gamesWon/matchesPlayed)*100;
+            out.println("Played matches: "+matchesPlayed+"\n");
+            out.println("Games Won: "+gamesWon+"%\n");
+            out.println("Last Streak: "+lastStreak+"\n");
+            out.println("Max Streak: "+maxStreak+"\n");
+            out.println("Guess Distribution: "+guessDistribution+"\n");
         }
-        guessDistribution=guessDistribution/matchesPlayed;
-        gamesWon=(matchesPlayed/100)*gamesWon;
-        out.println("Played matches: "+matchesPlayed+"\n");
-        out.println("Games Won: "+gamesWon+"%\n");
-        out.println("Max Streak: "+maxStreak+"\n");
-        out.println("Max Streak: "+maxStreak+"\n");
-        out.println("Guess Distribution: "+guessDistribution+"\n");
     }
 
     public void share(String username) {
@@ -266,6 +274,7 @@ public class ServerTask implements Runnable{
             String s = new String("User: "+username+" has won!");
             DatagramPacket request = new DatagramPacket(s.getBytes(), s.length(), group, multicastPort);
             socket.send(request);
+            out.println("SHARED");
             synchronized (notificationsSent){
                 notificationsSent.add(s);
             }
