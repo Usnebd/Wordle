@@ -4,5 +4,6 @@
   "timeout": 2000,
   "multicastAddress": "239.255.255.250",
   "multicastPort": 45588,
-  "secretWordRate": 2
+  "secretWordRate": 6,
+  "datafile": "src\\data.json"
 }

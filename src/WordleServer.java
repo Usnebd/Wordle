@@ -1,7 +1,11 @@
 import com.google.gson.*;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Random;
 import java.util.concurrent.*;
 
@@ -10,8 +14,6 @@ public class WordleServer implements Runnable{
     private static ArrayList<String> words = new ArrayList<>();
     public void run(){
         ConcurrentHashMap<String, UserData> hashMap = new ConcurrentHashMap<String, UserData>();
-        InetAddress group = null;
-        int multicastPort;
         //Apro il file config.json
         try {
             ArrayList<Socket> connections = new ArrayList<>();
@@ -24,8 +26,10 @@ public class WordleServer implements Runnable{
             int secretWordRate = fileObject.get("secretWordRate").getAsInt();
             int welcomePort = fileObject.get("server_port").getAsInt();
             int timeout = fileObject.get("timeout").getAsInt();
-            group = InetAddress.getByName(fileObject.get("multicastAddress").getAsString());
-            multicastPort = fileObject.get("multicastPort").getAsInt();
+            InetAddress group = InetAddress.getByName(fileObject.get("multicastAddress").getAsString());
+            int multicastPort = fileObject.get("multicastPort").getAsInt();
+            String datafilepath = fileObject.get("datafile").getAsString();
+            loadData(datafilepath,hashMap);
             ServerTask.multicastPort = multicastPort;
             ServerTask.group = group;
             //creo un welcome socket sulla porta "welcomePort"
@@ -44,7 +48,7 @@ public class WordleServer implements Runnable{
                     service.execute(new ServerTask(hashMap,client,words));
                 } catch (IOException ignore) {}
             }
-
+            saveData(datafilepath,hashMap);
             serverSocket.close();
             scheduledSwService.shutdown();
             service.shutdown();
@@ -89,7 +93,68 @@ public class WordleServer implements Runnable{
             throw new RuntimeException(e);
         }
     }
-    public static void saveData(){
+    private static void loadData(String pathname, ConcurrentHashMap hashMap) {
+        try {
+            JsonReader reader = new JsonReader(new FileReader(pathname));
+            reader.beginArray();
+            while(reader.hasNext()){
+                reader.beginObject();
+                UserData user;
+                reader.nextName();
+                String username = reader.nextString();
+                reader.nextName();
+                String password = reader.nextString();
+                reader.nextName();
+                int maxStreak = reader.nextInt();
+                reader.nextName();
+                int lastStreak = reader.nextInt();
+                reader.nextName();
+                int playedMatches = reader.nextInt();
+                reader.nextName();
+                int gamesWon = reader.nextInt();
+                reader.nextName();
+                int guessDistribution = reader.nextInt();
+                reader.endObject();
+                user = new UserData(password);
+                user.setPlayedMatches(playedMatches);
+                user.setGamesWon(gamesWon);
+                user.setLastStreak(lastStreak);
+                user.setMaxStreak(maxStreak);
+                user.setGuessDistribution(guessDistribution);
+                hashMap.putIfAbsent(username,user);
+            }
+            reader.endArray();
+            reader.close();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
+    }
+    public static void saveData(String pathname, ConcurrentHashMap hashMap){
+        JsonWriter writer;
+        try {
+            writer = new JsonWriter(new FileWriter(pathname));
+            Iterator<String> it = hashMap.keySet().iterator();
+            writer.beginArray();
+            while(it.hasNext()){
+                String key = it.next();
+                UserData user= (UserData) hashMap.get(key);
+                writer.beginObject();
+                writer.name("username").value(key);
+                writer.name("password").value(user.getPassword());
+                writer.name("maxStreak").value(user.getMaxStreak());
+                writer.name("lastStreak").value(user.getLastStreak());
+                writer.name("playedMatches").value(user.getPlayedMatches());
+                writer.name("gamesWon").value(user.getGamesWon());
+                writer.name("guessDistribution").value(user.getGuessDistribution());
+                writer.endObject();
+            }
+            writer.endArray();
+            writer.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
