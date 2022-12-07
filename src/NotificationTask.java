@@ -23,13 +23,19 @@ public class NotificationTask implements Runnable {
             ms.joinGroup(group);
             byte[] buffer = new byte[8192];
             ms.setSoTimeout(timeout);
+            Boolean notData;
             while(!Thread.currentThread().isInterrupted()){
+                notData=false;
                 DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
                 try {
                     ms.receive(dp);
-                } catch (SocketTimeoutException ignore) {}
+                } catch (SocketTimeoutException ignore) {
+                    notData=true;
+                }
                 String s = new String(dp.getData(), 0, dp.getLength());
-                notifications.add(s);
+                if(!notData){
+                    notifications.add(s);
+                }
             }
             ms.leaveGroup(group);
             ms.close();

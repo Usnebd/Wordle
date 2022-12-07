@@ -13,7 +13,7 @@ import java.util.Scanner;
 public class WordleClientMain {
     public static void main(String[] args) {
         try {
-            ArrayList notifications = new ArrayList<>();
+            ArrayList<String> notifications = new ArrayList<>();
             JsonElement fileElement = JsonParser.parseReader(new FileReader("src\\config.json"));
             JsonObject fileObject = fileElement.getAsJsonObject();
             //extracting basic fields
@@ -44,7 +44,12 @@ public class WordleClientMain {
                     } catch (NoSuchElementException ignore) {
                         received = "Logout done!";
                     }
-                    if(!received.equals("end")){
+                    if(received.equals("showMeSharing()")){
+                        for(String s:notifications){
+                            System.out.println(s+"\n");
+                        }
+                    }
+                    else if(!received.equals("end")){
                         System.out.println(received);
                     }
                 }

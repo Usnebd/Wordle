@@ -8,7 +8,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ServerTask implements Runnable{
     public static InetAddress group;
     public static int multicastPort;
-    public static ArrayList<String> notificationsSent = new ArrayList<>();
     private UserData user;
     private Socket socket;
     private Scanner in;
@@ -110,7 +109,7 @@ public class ServerTask implements Runnable{
                                 share();
                                 break;
                             case "6":
-                                showMeSharing();
+                                out.println("showMeSharing()");
                                 break;
                             default:
                                 out.println("Bad input, try again\n");
@@ -154,7 +153,6 @@ public class ServerTask implements Runnable{
 
     public void playWORDLE(){
         secretWord=WordleServer.getSecretWord();
-        System.out.println(secretWord);
         if(lastSWplayed==secretWord){
             out.println("Error, you have already played");
             out.println("Wait for the next Secret Word to be selected");
@@ -291,23 +289,15 @@ public class ServerTask implements Runnable{
             for(String hint:hints){
                 s=s.concat(hint.concat("\n"));
             }
-            DatagramPacket request = new DatagramPacket(s.getBytes(), s.length(), group, multicastPort);
+            DatagramPacket request = new DatagramPacket(s.getBytes(), s.getBytes().length, group, multicastPort);
             socket.send(request);
             out.println("SHARED");
-            synchronized (notificationsSent){
-                notificationsSent.add(s);
-            }
         } catch (UnknownHostException e) {
             throw new RuntimeException(e);
         } catch (SocketException e) {
             throw new RuntimeException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
-    }
-    public void showMeSharing(){
-        for(String s: notificationsSent){
-            out.println(s);
         }
     }
 }
