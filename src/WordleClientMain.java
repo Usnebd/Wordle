@@ -4,8 +4,10 @@ import com.google.gson.JsonParser;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class WordleClientMain {
@@ -28,13 +30,20 @@ public class WordleClientMain {
             Scanner in = new Scanner(socket.getInputStream());
             PrintWriter out = new PrintWriter(socket.getOutputStream(),true);
             String received="null";
+            ClientSocketHandler clientSocketHandler = new ClientSocketHandler(socket);
             NotificationTask notificationTask = new NotificationTask(group, multicastPort, notifications, timeout);
-            Thread thread = new Thread (notificationTask);
-            thread.start();
+            Thread notificationThread = new Thread (notificationTask);
+            Thread socketThread = new Thread(clientSocketHandler);
+            socketThread.start();
+            notificationThread.start();
             do{
                 received="null";
                 while(!received.equals("end") && !received.equals("Logout done!")){
-                    received=in.nextLine();
+                    try {
+                        received=in.nextLine();
+                    } catch (NoSuchElementException ignore) {
+                        received = "Logout done!";
+                    }
                     if(!received.equals("end")){
                         System.out.println(received);
                     }
@@ -42,12 +51,15 @@ public class WordleClientMain {
                 if(!received.equals("Logout done!")){
                     out.println(scanner.nextLine());
                 }
-            }while(!socket.isClosed() && !received.equals("Logout done!"));
-            thread.interrupt();
-            System.out.println("Notification thread is shutting down....");
+            }while(!received.equals("Logout done!"));
+            System.out.println("Client is shutting down....");
+            socketThread.interrupt();
+            notificationThread.interrupt();
             scanner.close();
             out.close();
             in.close();
+        } catch (SocketException e) {
+            throw new RuntimeException(e);
         } catch (UnknownHostException e) {
             throw new RuntimeException(e);
         } catch (FileNotFoundException e) {

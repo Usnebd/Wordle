@@ -23,18 +23,14 @@ public class NotificationTask implements Runnable {
             ms.joinGroup(group);
             byte[] buffer = new byte[8192];
             ms.setSoTimeout(timeout);
-            while (!Thread.currentThread().isInterrupted()){
+            while(!Thread.currentThread().isInterrupted()){
                 DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
                 try {
                     ms.receive(dp);
                 } catch (SocketTimeoutException ignore) {}
-                if(dp.getData().length==0){
-
-                }
                 String s = new String(dp.getData(), 0, dp.getLength());
                 notifications.add(s);
             }
-            System.out.println("Notification thread shutted down!");
             ms.leaveGroup(group);
             ms.close();
         } catch (SocketException e) {

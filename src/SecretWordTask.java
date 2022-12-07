@@ -13,6 +13,6 @@ public class SecretWordTask implements Runnable {
 
     public void run() {
         String secretWord = words.get(random.nextInt(lines));
-        WordleServerMain.setSecretWord(secretWord);
+        WordleServer.setSecretWord(secretWord);
     }
 }

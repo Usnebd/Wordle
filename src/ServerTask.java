@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -16,9 +17,10 @@ public class ServerTask implements Runnable{
     private ArrayList<String> words;
     private int round=-1;
     private String lastSWplayed="null";
-    private String secretWord=WordleServerMain.getSecretWord();
+    private String secretWord=WordleServer.getSecretWord();
     private ArrayList<String> guessedWords = new ArrayList<String>(12);
     private ArrayList<String> hints = new ArrayList<String>(12);
+
     public ServerTask(ConcurrentHashMap<String, UserData> hashMap, Socket socket, ArrayList<String> words){
         this.socket=socket;
         this.hashMap=hashMap;
@@ -38,79 +40,83 @@ public class ServerTask implements Runnable{
             String password;
             String command;
             do{
-                if(logged==false){
-                    out.println(startMenu);
-                    out.println("end");
-                    command=in.nextLine();
-                    switch(command){
-                        case "1":
-                            if(registered==true){
-                                out.println("Error, user is already registered");
-                            }else{
-                                out.println("Insert Username");
-                                out.println("end");
-                                username = in.nextLine();
-                                out.println("Insert Password");
-                                out.println("end");
-                                password = in.nextLine();
-                                String result = register(username,password);
-                                if(result.equals("Registered successfully!\n")){
-                                    registered=true;
+                try {
+                    if(logged==false){
+                        out.println(startMenu);
+                        out.println("end");
+                        command=in.nextLine();
+                        switch(command){
+                            case "1":
+                                if(registered==true){
+                                    out.println("Error, user is already registered");
+                                }else{
+                                    out.println("Insert Username");
+                                    out.println("end");
+                                    username = in.nextLine();
+                                    out.println("Insert Password");
+                                    out.println("end");
+                                    password = in.nextLine();
+                                    String result = register(username,password);
+                                    if(result.equals("Registered successfully!\n")){
+                                        registered=true;
+                                    }
+                                    out.println(result);
                                 }
-                                out.println(result);
-                            }
-                            break;
-                        case "2":
-                            if(logged){
-                                out.println("Error, user is already logged");
-                            }else{
-                                out.println("Insert Username");
-                                out.println("end");
-                                username = in.nextLine();
-                                out.println("Insert Password");
-                                out.println("end");
-                                password = in.nextLine();
-                                String result = login(username,password);
-                                if(result.equals("Logged successfully!\n")){
-                                    logged=true;
+                                break;
+                            case "2":
+                                if(logged){
+                                    out.println("Error, user is already logged");
+                                }else{
+                                    out.println("Insert Username");
+                                    out.println("end");
+                                    username = in.nextLine();
+                                    out.println("Insert Password");
+                                    out.println("end");
+                                    password = in.nextLine();
+                                    String result = login(username,password);
+                                    if(result.equals("Logged successfully!\n")){
+                                        logged=true;
+                                    }
+                                    out.println(result);
                                 }
-                                out.println(result);
-                            }
-                            break;
-                        default:
-                            out.println("Bad input, try again\n");
-                            break;
+                                break;
+                            default:
+                                out.println("Bad input, try again\n");
+                                break;
+                        }
+                    }else{
+                        out.println(menu);
+                        out.println("end");
+                        command=in.nextLine();
+                        switch(command){
+                            case "1":
+                                out.println(logout());
+                                logout=true;
+                                break;
+                            case "2":
+                                playWORDLE();
+                                break;
+                            case "3":
+                                sendWord();
+                                break;
+                            case "4":
+                                sendMeStatistics();
+                                break;
+                            case "5":
+                                share(username);
+                                break;
+                            case "6":
+                                showMeSharing();
+                                break;
+                            default:
+                                out.println("Bad input, try again\n");
+                                break;
+                        }
                     }
-                }else{
-                    out.println(menu);
-                    out.println("end");
-                    command=in.nextLine();
-                    switch(command){
-                        case "1":
-                            out.println(logout());
-                            logout=true;
-                            break;
-                        case "2":
-                            playWORDLE();
-                            break;
-                        case "3":
-                            sendWord();
-                            break;
-                        case "4":
-                            sendMeStatistics();
-                            break;
-                        case "5":
-                            share(username);
-                            break;
-                        case "6":
-                            showMeSharing();
-                            break;
-                        default:
-                            out.println("Bad input, try again\n");
-                            break;
-                    }
-                }
-            }while(!logout);
+                } catch (NoSuchElementException ignore) {}
+            }while(!logout && !Thread.currentThread().isInterrupted());
+            updateUserData();
+            hashMap.replace(username,user);
             in.close();
             out.close();
             socket.close();
@@ -144,8 +150,7 @@ public class ServerTask implements Runnable{
     }
 
     public void playWORDLE(){
-        secretWord=WordleServerMain.getSecretWord();
-        System.out.println(secretWord);
+        secretWord=WordleServer.getSecretWord();
         if(lastSWplayed==secretWord){
             out.println("Error, you have already played");
             out.println("Wait for the next Secret Word to be selected");
@@ -231,44 +236,50 @@ public class ServerTask implements Runnable{
         if(lastSWplayed=="null"){
            out.println("Error, you have completed no games");
         }else{
-            ArrayList<Boolean> matchesResults = user.getMatchesResults();
-            int gamesWon=0;
-            int lastStreak=0;
-            int aux=0;
-            Boolean exit=false;
-            int maxStreak=0;
-            int guessDistribution= user.getGuesses();
-            int matchesPlayed=matchesResults.size();
-            for(Boolean bool: matchesResults){
-                if(bool==true){
-                    gamesWon++;
-                    aux++;
-                    if(aux>maxStreak){
-                        maxStreak=aux;
-                    }
-                }else{
-                    aux=0;
-                }
-            }
-            for(int i=matchesPlayed-1;i>=0;i--){
-                if(!exit){
-                    if(matchesResults.get(i)==true){
-                        lastStreak++;
-                    }else{
-                        exit=true;
-                    }
-                }
-            }
-            guessDistribution=guessDistribution/matchesPlayed;
-            gamesWon=(gamesWon/matchesPlayed)*100;
-            out.println("Played matches: "+matchesPlayed+"\n");
-            out.println("Games Won: "+gamesWon+"%\n");
-            out.println("Last Streak: "+lastStreak+"\n");
-            out.println("Max Streak: "+maxStreak+"\n");
-            out.println("Guess Distribution: "+guessDistribution+"\n");
+            updateUserData();
+            out.println("Played matches: "+user.getMatchesResults().size()+"\n");
+            out.println("Games Won: "+user.getGamesWon()+"%\n");
+            out.println("Last Streak: "+user.getLastStreak()+"\n");
+            out.println("Max Streak: "+user.getMaxStreak()+"\n");
+            out.println("Guess Distribution: "+user.getGuessDistribution()+"\n");
         }
     }
-
+    public void updateUserData(){
+        ArrayList<Boolean> matchesResults = user.getMatchesResults();
+        int gamesWon=0;
+        int lastStreak=0;
+        int aux=0;
+        Boolean exit=false;
+        int maxStreak=0;
+        int guessDistribution= user.getGuesses();
+        int matchesPlayed=matchesResults.size();
+        for(Boolean bool: matchesResults){
+            if(bool==true){
+                gamesWon++;
+                aux++;
+                if(aux>maxStreak){
+                    maxStreak=aux;
+                }
+            }else{
+                aux=0;
+            }
+        }
+        for(int i=matchesPlayed-1;i>=0;i--){
+            if(!exit){
+                if(matchesResults.get(i)==true){
+                    lastStreak++;
+                }else{
+                    exit=true;
+                }
+            }
+        }
+        guessDistribution=guessDistribution/matchesPlayed;
+        gamesWon=(gamesWon/matchesPlayed)*100;
+        user.setGamesWon(gamesWon);
+        user.setLastStreak(lastStreak);
+        user.setGuessDistribution(guessDistribution);
+        user.setMaxStreak(maxStreak);
+    }
     public void share(String username) {
         try {
             DatagramSocket socket = new DatagramSocket();
