@@ -16,8 +16,6 @@ public class ServerTask implements Runnable{
     private ArrayList<String> words;
     private int round=-1;
     private int guesses=0;
-    private int lastStreak=0;
-    private int maxStreak=0;
     private ArrayList<Boolean> matchesResults=new ArrayList<>();
     private String lastSWplayed="null";
     private String secretWord=WordleServer.getSecretWord();
@@ -175,6 +173,7 @@ public class ServerTask implements Runnable{
             out.println("Guess the word");
             out.println("end");
             guessedWord = in.nextLine();
+            guessedWord = guessedWord.toLowerCase();
             if (!words.contains(guessedWord)) {
                 out.println("Error, not a playable word!");
             } else if (guessedWords.contains(guessedWord)) {
@@ -184,9 +183,9 @@ public class ServerTask implements Runnable{
                     matchesResults.add(true);
                     user.setGuessDistribution(((user.getGuessDistribution()*user.getPlayedMatches())+guesses+1)/ (user.getPlayedMatches()+1));
                     user.setPlayedMatches(user.getPlayedMatches()+1);
-                    user.setLastStreak(findLastStreak());
-                    user.setMaxStreak(findMaxStreak());
                     user.setGamesWon(user.getGamesWon()+1);
+                    user.setLastStreak(user.getLastStreak()+1);
+                    user.setMaxStreak(findMaxStreak(user.getMaxStreak()));
                     hints.add("++++++++++");
                     guessedWords.add(guessedWord);
                     lastSWplayed = secretWord;
@@ -230,6 +229,7 @@ public class ServerTask implements Runnable{
                         matchesResults.add(false);
                         user.setGuessDistribution(((user.getGuessDistribution()*user.getPlayedMatches())+guesses+1)/ (user.getPlayedMatches()+1));
                         user.setPlayedMatches(user.getPlayedMatches()+1);
+                        user.setLastStreak(0);
                         guesses=0;
                         lastSWplayed = secretWord;
                         round = -1;
@@ -242,7 +242,7 @@ public class ServerTask implements Runnable{
         }
     }
 
-    public int findMaxStreak(){
+    public int findMaxStreak(int maxStreak){
         int aux=0;
         for(Boolean bool: matchesResults){
             if(bool==true){
@@ -255,19 +255,6 @@ public class ServerTask implements Runnable{
             }
         }
         return maxStreak;
-    }
-    public int findLastStreak(){
-        Boolean exit=false;
-        for(int i= user.getPlayedMatches()-1;i>=0;i--){
-            if(!exit){
-                if(matchesResults.get(i)==true){
-                    lastStreak++;
-                }else{
-                    exit=true;
-                }
-            }
-        }
-        return lastStreak;
     }
 
     public void sendMeStatistics(){
