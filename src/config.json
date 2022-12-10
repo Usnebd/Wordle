@@ -5,5 +5,6 @@
   "multicastAddress": "239.255.255.250",
   "multicastPort": 45588,
   "secretWordRate": 8,
-  "datafile": "src\\data.json"
+  "datafile": "data.json",
+  "wordfile": "words.txt"
 }

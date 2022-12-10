@@ -17,10 +17,9 @@ public class WordleServer implements Runnable{
         //Apro il file config.json
         try {
             ArrayList<Socket> connections = new ArrayList<>();
-            int wordsNumber = loadWords(words,"src\\words.txt");
             //Seleziona la parola nella riga k-esima, con k numero casuale
             Random random = new Random();
-            JsonElement fileElement = JsonParser.parseReader(new FileReader("src\\config.json"));
+            JsonElement fileElement = JsonParser.parseReader(new FileReader("config.json"));
             JsonObject fileObject = fileElement.getAsJsonObject();
             //extracting basic fields
             int secretWordRate = fileObject.get("secretWordRate").getAsInt();
@@ -29,7 +28,9 @@ public class WordleServer implements Runnable{
             InetAddress group = InetAddress.getByName(fileObject.get("multicastAddress").getAsString());
             int multicastPort = fileObject.get("multicastPort").getAsInt();
             String datafilepath = fileObject.get("datafile").getAsString();
+            String wordfilepath = fileObject.get("wordfile").getAsString();
             loadData(datafilepath,hashMap);
+            int wordsNumber = loadWords(words,wordfilepath);
             ServerTask.multicastPort = multicastPort;
             ServerTask.group = group;
             //creo un welcome socket sulla porta "welcomePort"

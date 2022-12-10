@@ -29,7 +29,7 @@ public class NotificationTask implements Runnable {
                 DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
                 try {
                     ms.receive(dp);
-                } catch (SocketTimeoutException ignore) {
+                } catch (SocketTimeoutException e) {
                     notData=true;
                 }
                 String s = new String(dp.getData(), 0, dp.getLength());

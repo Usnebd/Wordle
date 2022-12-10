@@ -14,7 +14,7 @@ public class WordleClientMain {
     public static void main(String[] args) {
         try {
             ArrayList<String> notifications = new ArrayList<>();
-            JsonElement fileElement = JsonParser.parseReader(new FileReader("src\\config.json"));
+            JsonElement fileElement = JsonParser.parseReader(new FileReader("config.json"));
             JsonObject fileObject = fileElement.getAsJsonObject();
             //extracting basic fields
             int welcomePort = fileObject.get("server_port").getAsInt();
