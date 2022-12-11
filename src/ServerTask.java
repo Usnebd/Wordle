@@ -270,7 +270,8 @@ public class ServerTask implements Runnable{
     }
 
     public void share() {
-        try {
+        if(user.getPlayedMatches()>0){
+            try {
             DatagramSocket socket = new DatagramSocket();
             String s="WORDLE "+user.getPlayedMatches()+": "+guessedWords.size()+"/12\n\n";
             for(String hint:hints){
@@ -279,12 +280,15 @@ public class ServerTask implements Runnable{
             DatagramPacket request = new DatagramPacket(s.getBytes(), s.getBytes().length, group, multicastPort);
             socket.send(request);
             out.println("SHARED");
-        } catch (UnknownHostException e) {
-            throw new RuntimeException(e);
-        } catch (SocketException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            } catch (UnknownHostException e) {
+                throw new RuntimeException(e);
+            } catch (SocketException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }else{
+           out.println("Error"); 
         }
     }
 }
