@@ -34,3 +34,5 @@ public class UserData {
         return guessDistribution;
     }
 }
+
+//qui non c'è molto da dire, è praticamente una classe che genera un oggetto che funge da raccoglitore di dati dell'utente X tramite metodi getter e setter
