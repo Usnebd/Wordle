@@ -1,15 +1,12 @@
 import java.io.IOException;
 import java.net.*;
-import java.nio.ByteBuffer;
-import java.nio.channels.DatagramChannel;
-import java.nio.channels.MulticastChannel;
 import java.util.ArrayList;
 
 public class NotificationTask implements Runnable {
-    private InetAddress group;
-    private int multicastPort;
-    private ArrayList notifications;
-    private int timeout;
+    private final InetAddress group;
+    private final int multicastPort;
+    private final ArrayList notifications;
+    private final int timeout;
     public NotificationTask(InetAddress group, int multicastPort, ArrayList notifications, int timeout) {
         this.group = group;
         this.multicastPort = multicastPort;
@@ -23,7 +20,7 @@ public class NotificationTask implements Runnable {
             ms.joinGroup(group);
             byte[] buffer = new byte[8192];
             ms.setSoTimeout(timeout);
-            Boolean notData;
+            boolean notData;
             while(!Thread.currentThread().isInterrupted()){
                 notData=false;
                 DatagramPacket dp = new DatagramPacket(buffer, buffer.length);

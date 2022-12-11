@@ -11,7 +11,7 @@ import java.util.concurrent.*;
 
 public class WordleServer implements Runnable{
     private static String secretWord;
-    private static ArrayList<String> words = new ArrayList<>();
+    private static final ArrayList<String> words = new ArrayList<>();
     public void run(){
         ConcurrentHashMap<String, UserData> hashMap = new ConcurrentHashMap<String, UserData>();
         //Apro il file config.json
@@ -38,7 +38,7 @@ public class WordleServer implements Runnable{
             serverSocket.setSoTimeout(timeout);
             //creo un ThreadPool per gestire gli utenti e uno per estrarre la Secret Word casual periodicamente
             ExecutorService service = Executors.newCachedThreadPool();
-            SecretWordTask secretWordTask = new SecretWordTask(random,wordsNumber,secretWordRate,words);
+            SecretWordTask secretWordTask = new SecretWordTask(random,wordsNumber,words);
             ScheduledExecutorService  scheduledSwService = Executors.newSingleThreadScheduledExecutor();
             scheduledSwService.scheduleAtFixedRate(secretWordTask,0L,secretWordRate,TimeUnit.MINUTES);
             while(!Thread.currentThread().isInterrupted()){

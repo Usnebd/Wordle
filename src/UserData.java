@@ -1,5 +1,5 @@
 public class UserData {
-    private String password;
+    private final String password;
     private int gamesWon=0;
     private int lastStreak=0;
     private int maxStreak=0;

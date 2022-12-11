@@ -9,18 +9,18 @@ public class ServerTask implements Runnable{
     public static InetAddress group;
     public static int multicastPort;
     private UserData user;
-    private Socket socket;
+    private final Socket socket;
     private Scanner in;
     private PrintWriter out;
-    private ConcurrentHashMap<String, UserData> hashMap;
-    private ArrayList<String> words;
+    private final ConcurrentHashMap<String, UserData> hashMap;
+    private final ArrayList<String> words;
     private int round=-1;
     private int guesses=0;
-    private ArrayList<Boolean> matchesResults=new ArrayList<>();
+    private final ArrayList<Boolean> matchesResults=new ArrayList<>();
     private String lastSWplayed="null";
     private String secretWord=WordleServer.getSecretWord();
-    private ArrayList<String> guessedWords = new ArrayList<String>(12);
-    private ArrayList<String> hints = new ArrayList<String>(12);
+    private final ArrayList<String> guessedWords = new ArrayList<String>(12);
+    private final ArrayList<String> hints = new ArrayList<String>(12);
 
     public ServerTask(ConcurrentHashMap<String, UserData> hashMap, Socket socket, ArrayList<String> words){
         this.socket=socket;
@@ -34,21 +34,21 @@ public class ServerTask implements Runnable{
             out = new PrintWriter(socket.getOutputStream(),true);
             String menu = "Insert Command\n"+"1) logout\n"+"2) playWORDLE\n"+"3) sendWord\n"+"4) sendMeStatistics\n"+"5) share\n"+"6) showMeSharing";
             String startMenu="Insert Command\n"+"1) register\n"+"2) login\n";
-            Boolean logged=false;
-            Boolean registered=false;
-            Boolean logout=false;
+            boolean logged=false;
+            boolean registered=false;
+            boolean logout=false;
             String username = null;
             String password;
             String command;
             do{
                 try {
-                    if(logged==false){
+                    if(!logged){
                         out.println(startMenu);
                         out.println("end");
                         command=in.nextLine();
                         switch(command){
                             case "1":
-                                if(registered==true){
+                                if(registered){
                                     out.println("Error, user is already registered");
                                 }else{
                                     out.println("Insert Username");
@@ -65,21 +65,17 @@ public class ServerTask implements Runnable{
                                 }
                                 break;
                             case "2":
-                                if(logged){
-                                    out.println("Error, user is already logged");
-                                }else{
-                                    out.println("Insert Username");
-                                    out.println("end");
-                                    username = in.nextLine();
-                                    out.println("Insert Password");
-                                    out.println("end");
-                                    password = in.nextLine();
-                                    String result = login(username,password);
-                                    if(result.equals("Logged successfully!\n")){
-                                        logged=true;
-                                    }
-                                    out.println(result);
+                                out.println("Insert Username");
+                                out.println("end");
+                                username = in.nextLine();
+                                out.println("Insert Password");
+                                out.println("end");
+                                password = in.nextLine();
+                                String result = login(username,password);
+                                if(result.equals("Logged successfully!\n")){
+                                    logged=true;
                                 }
+                                out.println(result);
                                 break;
                             default:
                                 out.println("Bad input, try again\n");
@@ -151,7 +147,7 @@ public class ServerTask implements Runnable{
 
     public void playWORDLE(){
         secretWord=WordleServer.getSecretWord();
-        if(lastSWplayed==secretWord){
+        if(lastSWplayed.equals(secretWord)){
             out.println("Error, you have already played");
             out.println("Wait for the next Secret Word to be selected");
         }
@@ -245,7 +241,7 @@ public class ServerTask implements Runnable{
     public int findMaxStreak(int maxStreak){
         int aux=0;
         for(Boolean bool: matchesResults){
-            if(bool==true){
+            if(bool){
                 aux++;
                 if(aux>maxStreak){
                     maxStreak=aux;
@@ -271,19 +267,14 @@ public class ServerTask implements Runnable{
 
     public void share() {
         if(user.getPlayedMatches()>0){
-            try {
-            DatagramSocket socket = new DatagramSocket();
-            String s="WORDLE "+user.getPlayedMatches()+": "+guessedWords.size()+"/12\n\n";
-            for(String hint:hints){
-                s=s.concat(hint.concat("\n"));
-            }
-            DatagramPacket request = new DatagramPacket(s.getBytes(), s.getBytes().length, group, multicastPort);
-            socket.send(request);
-            out.println("SHARED");
-            } catch (UnknownHostException e) {
-                throw new RuntimeException(e);
-            } catch (SocketException e) {
-                throw new RuntimeException(e);
+            try(DatagramSocket socket = new DatagramSocket()){
+                String s="WORDLE "+user.getPlayedMatches()+": "+guessedWords.size()+"/12\n\n";
+                for(String hint:hints){
+                    s=s.concat(hint.concat("\n"));
+                }
+                DatagramPacket request = new DatagramPacket(s.getBytes(), s.getBytes().length, group, multicastPort);
+                socket.send(request);
+                out.println("SHARED");
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
