@@ -13,28 +13,28 @@ import java.util.Scanner;
 public class WordleClientMain {
     public static void main(String[] args) {
         try {
-            ArrayList<String> notifications = new ArrayList<>();
+            ArrayList<String> notifications = new ArrayList<>();        //array che raccoglie le notifiche ricevute dal gruppo multicast
             JsonElement fileElement = JsonParser.parseReader(new FileReader("config.json"));
             JsonObject fileObject = fileElement.getAsJsonObject();
-            //extracting basic fields
-            int welcomePort = fileObject.get("server_port").getAsInt();
+                                                                        //estraggo il dati di configurazione dal file Json
+            int serverPort = fileObject.get("server_port").getAsInt();
             InetAddress ia = InetAddress.getByName(fileObject.get("server_hostname").getAsString());
             int timeout = fileObject.get("timeout").getAsInt();
             InetAddress group = InetAddress.getByName(fileObject.get("multicastAddress").getAsString());
             int multicastPort = fileObject.get("multicastPort").getAsInt();
-            //apro il file config.txt
-            Socket socket = new Socket(ia, welcomePort);
+            Socket socket = new Socket(ia, serverPort);          //mi connetto al server alla porta "serverPort"
             socket.setSoTimeout(timeout);
-            Scanner scanner = new Scanner(System.in);
+            Scanner scanner = new Scanner(System.in);           //creo uno scanner per leggere l'input da tastiera
             //inserire un comando 1...8
-            Scanner in = new Scanner(socket.getInputStream());
-            PrintWriter out = new PrintWriter(socket.getOutputStream(),true);
+            Scanner in = new Scanner(socket.getInputStream());  //creo uno scanner per leggere nello stream di input
+            PrintWriter out = new PrintWriter(socket.getOutputStream(),true); //creo un PrintWriter per scrivere nello stream di output
             String received="null";
             ClientSocketHandler clientSocketHandler = new ClientSocketHandler(socket);
             NotificationTask notificationTask = new NotificationTask(group, multicastPort, notifications, timeout);
+            //creo i task per la gestione del socket e delle notifiche e poi li passo come paramentri nei relativi thread
             Thread notificationThread = new Thread (notificationTask);
             Thread socketThread = new Thread(clientSocketHandler);
-            socketThread.start();
+            socketThread.start();           //li avvio
             notificationThread.start();
             do{
                 received="null";
@@ -44,22 +44,22 @@ public class WordleClientMain {
                     } catch (NoSuchElementException ignore) {
                         received = "Logout done!";
                     }
-                    if(received.equals("showMeSharing()")){
-                        for(String s:notifications){
+                    if(received.equals("showMeSharing()")){       //quando received è uguale a showMeSharing()
+                        for(String s:notifications){              //stampo tutte le notifiche ricevute
                             System.out.println(s+"\n");
                         }
                     }
-                    else if(!received.equals("end")){
+                    else if(!received.equals("end")){             //se non ho letto la stringa di fine messaggio allora la stampo
                         System.out.println(received);
                     }
                 }
-                if(!received.equals("Logout done!")){
+                if(!received.equals("Logout done!")){            //se il server restituisce Logout done! non leggo da input
                     out.println(scanner.nextLine());
                 }
             }while(!received.equals("Logout done!"));
             System.out.println("Client is shutting down....");
             socketThread.interrupt();
-            notificationThread.interrupt();
+            notificationThread.interrupt();     //arresto i thread e chiudo i vari stream aperti
             scanner.close();
             out.close();
             in.close();
