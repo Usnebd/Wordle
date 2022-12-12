@@ -41,5 +41,6 @@ public class WordleServerMain {
                 badInput=true;
             }
         }
+        scanner.close();
     }
 }

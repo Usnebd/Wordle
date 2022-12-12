@@ -14,7 +14,7 @@ public class WordleClientMain {
     public static void main(String[] args) {
         try {
             ArrayList<String> notifications = new ArrayList<>();        //array che raccoglie le notifiche ricevute dal gruppo multicast
-            JsonElement fileElement = JsonParser.parseReader(new FileReader("config.json"));
+            JsonElement fileElement = JsonParser.parseReader(new FileReader("src\\config.json"));
             JsonObject fileObject = fileElement.getAsJsonObject();
                                                                         //estraggo il dati di configurazione dal file Json
             int serverPort = fileObject.get("server_port").getAsInt();
@@ -29,12 +29,9 @@ public class WordleClientMain {
             Scanner in = new Scanner(socket.getInputStream());  //creo uno scanner per leggere nello stream di input
             PrintWriter out = new PrintWriter(socket.getOutputStream(),true); //creo un PrintWriter per scrivere nello stream di output
             String received="null";
-            ClientSocketHandler clientSocketHandler = new ClientSocketHandler(socket);
             NotificationTask notificationTask = new NotificationTask(group, multicastPort, notifications, timeout);
             //creo i task per la gestione del socket e delle notifiche e poi li passo come paramentri nei relativi thread
             Thread notificationThread = new Thread (notificationTask);
-            Thread socketThread = new Thread(clientSocketHandler);
-            socketThread.start();           //li avvio
             notificationThread.start();
             do{
                 received="null";
@@ -58,7 +55,7 @@ public class WordleClientMain {
                 }
             }while(!received.equals("Logout done!"));
             System.out.println("Client is shutting down....");
-            socketThread.interrupt();
+            socket.close();
             notificationThread.interrupt();     //arresto i thread e chiudo i vari stream aperti
             scanner.close();
             out.close();

@@ -131,7 +131,7 @@ public class ServerTask implements Runnable{
     }
 
     public void playWORDLE(){                                           //avvio il gioco
-        secretWord=WordleServer.getSecretWord();                        //prendo la secretWord dal server
+        secretWord=WordleServer.getSecretWord();
         if(lastSWplayed.equals(secretWord)){                            //confronto la secretWord appena presa del server
             out.println("Error, you have already played");
             out.println("Wait for the next Secret Word to be selected");
@@ -208,7 +208,7 @@ public class ServerTask implements Runnable{
                     round++;                                                        //incremento i round
                     if(round==12){                                                  //se era il dodicesimo round e non ho indovinato ho perso
                         matchesResults.add(false);
-                        user.setGuessDistribution(((user.getGuessDistribution()*user.getPlayedMatches())+guesses+1)/ (user.getPlayedMatches()+1));
+                        user.setGuessDistribution(((user.getGuessDistribution()*user.getPlayedMatches())+guesses)/ (user.getPlayedMatches()+1));
                         user.setPlayedMatches(user.getPlayedMatches()+1);
                         user.setLastStreak(0);
                         guesses=0;
