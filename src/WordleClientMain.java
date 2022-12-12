@@ -29,12 +29,9 @@ public class WordleClientMain {
             Scanner in = new Scanner(socket.getInputStream());  //creo uno scanner per leggere nello stream di input
             PrintWriter out = new PrintWriter(socket.getOutputStream(),true); //creo un PrintWriter per scrivere nello stream di output
             String received="null";
-            ClientSocketHandler clientSocketHandler = new ClientSocketHandler(socket);
             NotificationTask notificationTask = new NotificationTask(group, multicastPort, notifications, timeout);
             //creo i task per la gestione del socket e delle notifiche e poi li passo come paramentri nei relativi thread
             Thread notificationThread = new Thread (notificationTask);
-            Thread socketThread = new Thread(clientSocketHandler);
-            socketThread.start();           //li avvio
             notificationThread.start();
             do{
                 received="null";
@@ -54,11 +51,13 @@ public class WordleClientMain {
                     }
                 }
                 if(!received.equals("Logout done!")){            //se il server restituisce Logout done! non leggo da input
-                    out.println(scanner.nextLine());
+                    String str = scanner.nextLine();
+                    out.println(str);
                 }
             }while(!received.equals("Logout done!"));
+            out.println("CODE_SHUTDOWN_0");
             System.out.println("Client is shutting down....");
-            socketThread.interrupt();
+            socket.close();
             notificationThread.interrupt();     //arresto i thread e chiudo i vari stream aperti
             scanner.close();
             out.close();

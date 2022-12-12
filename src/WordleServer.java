@@ -12,11 +12,11 @@ import java.util.concurrent.*;
 public class WordleServer implements Runnable{
     private static String secretWord;                                   //secretWord è una variabile statica che verrà aggiornata periodicamente con la nuova secretWord del server
     public static ArrayList<String> words = new ArrayList<>();   //array in cui verranno salvate tutte le parole presenti nel vocabolario del file words.txt
-    public static ConcurrentHashMap<String, UserData> hashMap = new ConcurrentHashMap<String, UserData>();        //struttura dati concorrente in cui verranno salvate coppie (username,Oggetto Userdata)
     public static InetAddress group;                        //indirizzo del gruppo di multicast
     public static int multicastPort;                        //porta a cui il server spedirà il datagramma multicast
     public void run(){
         try {
+            ConcurrentHashMap<String, UserData> hashMap = new ConcurrentHashMap<String, UserData>(); //struttura dati concorrente in cui verranno salvate coppie (username,Oggetto Userdata)
             Random random = new Random();                               //oggetto che mi serve per generare numeri random(servirà più in avanti)
             JsonElement fileElement = JsonParser.parseReader(new FileReader("config.json"));          //apro il file config.json
             JsonObject fileObject = fileElement.getAsJsonObject();
@@ -39,13 +39,14 @@ public class WordleServer implements Runnable{
             while(!Thread.currentThread().isInterrupted()){                                     //verifico che il thread Server non sia stato fermato
                 try {
                     //accetto una richiesta di connessione e salvo il socket della connessione nella variabile client
-                    service.execute(new ServerTask(serverSocket.accept()));      //mando in esecuzione un task che si occuperà di fornire un servizio al client
+                    service.execute(new ServerTask(serverSocket.accept(),hashMap));
+                    //mando in esecuzione un task che si occuperà di fornire un servizio al client
                 } catch (IOException ignore) {}
             }                                                       //dopo che è stata rilevato un Thread.interrupt() eseguo delle operazioni di terminazione
-            saveData(datafilepath,hashMap);                         //faccio "flush" dei dati degli utenti che sono presenti sulla hashMap nel file data.json
             serverSocket.close();                                   //chiudo il serverSocket
-            scheduledSwService.shutdown();                          //arresto il thread che genera periodicamente la secretWord
-            service.shutdown();                                     //arresto il threadpool
+            scheduledSwService.shutdownNow();                          //arresto il thread che genera periodicamente la secretWord
+            service.shutdownNow();                                     //arresto il threadpool
+            saveData(datafilepath,hashMap);                         //faccio "flush" dei dati degli utenti che sono presenti sulla hashMap nel file data.json
         } catch (SocketException e) {
             throw new RuntimeException(e);
         } catch (UnknownHostException e) {
