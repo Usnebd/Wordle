@@ -51,9 +51,11 @@ public class WordleClientMain {
                     }
                 }
                 if(!received.equals("Logout done!")){            //se il server restituisce Logout done! non leggo da input
-                    out.println(scanner.nextLine());
+                    String str = scanner.nextLine();
+                    out.println(str);
                 }
             }while(!received.equals("Logout done!"));
+            out.println("CODE_SHUTDOWN_0");
             System.out.println("Client is shutting down....");
             socket.close();
             notificationThread.interrupt();     //arresto i thread e chiudo i vari stream aperti

@@ -3,6 +3,7 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ServerTask implements Runnable{
     private UserData user;
@@ -14,11 +15,14 @@ public class ServerTask implements Runnable{
     private final ArrayList<Boolean> matchesResults=new ArrayList<>();      //array che memorizza l'esito delle partite
     private String lastSWplayed="null";
     private String secretWord;
+    private String username = null;
+    private ConcurrentHashMap<String, UserData> hashMap;
     private final ArrayList<String> guessedWords = new ArrayList<String>(12);
     private final ArrayList<String> hints = new ArrayList<String>(12);
 
-    public ServerTask(Socket socket){
+    public ServerTask(Socket socket, ConcurrentHashMap<String, UserData> hashMap){
         this.socket=socket;                      //inizializzo il task con il socket della connessione e SW
+        this.hashMap=hashMap;
         secretWord=WordleServer.getSecretWord();
     }
 
@@ -30,7 +34,6 @@ public class ServerTask implements Runnable{
             String startMenu="Insert Command\n"+"1) register\n"+"2) login\n";
             boolean logged=false;
             boolean logout=false;
-            String username = null;
             String password;
             String command;
             do{
@@ -47,7 +50,9 @@ public class ServerTask implements Runnable{
                                 out.println("Insert Password");
                                 out.println("end");
                                 password = in.nextLine();
-                                out.println(register(username,password));
+                                if(!Thread.currentThread().isInterrupted()){
+                                    out.println(register(username,password));
+                                }
                                 break;
                             case "2":
                                 out.println("Insert Username");
@@ -56,11 +61,13 @@ public class ServerTask implements Runnable{
                                 out.println("Insert Password");
                                 out.println("end");
                                 password = in.nextLine();
-                                String result = login(username,password);
-                                if(result.equals("Logged successfully!\n")){
-                                    logged=true;
+                                if(!Thread.currentThread().isInterrupted()){
+                                    String result = login(username,password);
+                                    if(result.equals("Logged successfully!\n")){
+                                        logged=true;
+                                    }
+                                    out.println(result);
                                 }
-                                out.println(result);
                                 break;
                             default:
                                 out.println("Bad input, try again\n");
@@ -69,20 +76,26 @@ public class ServerTask implements Runnable{
                     }else{      //se ho effettuato l'accesso
                         out.println(menu);
                         out.println("end");
-                        command=in.nextLine();
+                        command= in.nextLine();
                         switch(command){
                             case "1":
                                 out.println(logout());
                                 logout=true;
                                 break;
                             case "2":
-                                playWORDLE();
+                                if(!Thread.currentThread().isInterrupted()){
+                                    playWORDLE();
+                                }
                                 break;
                             case "3":
-                                sendWord();
+                                if(!Thread.currentThread().isInterrupted()){
+                                    sendWord();
+                                }
                                 break;
                             case "4":
-                                sendMeStatistics();
+                                if(!Thread.currentThread().isInterrupted()){
+                                    sendMeStatistics();
+                                }
                                 break;
                             case "5":
                                 share();
@@ -97,7 +110,10 @@ public class ServerTask implements Runnable{
                     }
                 } catch (NoSuchElementException ignore) {}
             }while(!logout && !Thread.currentThread().isInterrupted());
-            WordleServer.hashMap.replace(username,user);                                        //prima di terminare il task aggiorno la coppia <username,Userdata> con un oggetto aggiornato con i dati più recenti
+            out.println("Logout done!");
+            if(logged){                           //prima di terminare il task aggiorno la coppia <username,Userdata> con un oggetto aggiornato con i dati più recenti
+                hashMap.replace(username,user);
+            }
             in.close();
             out.close();                                                           //chiudo i vari stream e il socket
             socket.close();
@@ -107,7 +123,7 @@ public class ServerTask implements Runnable{
     }
 
     public String register(String username, String password){
-        if(WordleServer.hashMap.putIfAbsent(username,new UserData(password))!=null){     //se esiste già una coppia(putIfAbsent restituisce null) allora restituisco errore
+        if(hashMap.putIfAbsent(username,new UserData(password))!=null){     //se esiste già una coppia(putIfAbsent restituisce null) allora restituisco errore
             return "Error, user "+username+" is already registered\n";
         }else{
             return "Registered successfully!\n";                            //altrimenti lo inserisco nella hashMap in modo atomico e restituisco questo
@@ -115,11 +131,11 @@ public class ServerTask implements Runnable{
     }
 
     public String login(String username, String password) {
-        user=WordleServer.hashMap.get(username);                                     //cerco la coppia <username,userdata> nell'hashMap
+        user=hashMap.get(username);                                     //cerco la coppia <username,userdata> nell'hashMap
         if(user==null){                                                 //se non esiste nessun oggetto Userdata associato a "username" allora vuol dire che username non è registrato
             return "User not registered\n";
         }
-        else if(password.equals(WordleServer.hashMap.get(username).getPassword())){  //se la trova e la password combacia con quella passata per parametro allora confermo l'esito postivo del login
+        else if(password.equals(hashMap.get(username).getPassword())){  //se la trova e la password combacia con quella passata per parametro allora confermo l'esito postivo del login
             return "Logged successfully!\n";
         }else{                                                           //altrimenti vuol dire che ho sbagliato password
             return "Error, wrong credentials\n";
@@ -172,6 +188,7 @@ public class ServerTask implements Runnable{
                     lastSWplayed = secretWord;                          //aggiorno l'ultima secretWord giocata con la secretWord indovinata
                     round = -1;                                         //aggiorno la variabile round
                     guesses=0;
+                    hashMap.replace(username,user);
                     out.println("CONGRATULATIONS, YOU WON!");
                 } else {
                     guesses++;                                          //altrimenti incremento il numero di tentativi
@@ -214,6 +231,7 @@ public class ServerTask implements Runnable{
                         guesses=0;
                         lastSWplayed = secretWord;
                         round = -1;
+                        hashMap.replace(username,user);
                         out.println("You lost!");
                     }
                 }
@@ -268,3 +286,4 @@ public class ServerTask implements Runnable{
         }
     }
 }
+
