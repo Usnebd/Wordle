@@ -110,7 +110,6 @@ public class ServerTask implements Runnable{
                     }
                 } catch (NoSuchElementException ignore) {}
             }while(!logout && !Thread.currentThread().isInterrupted());
-            out.println("Logout done!");
             if(logged){                           //prima di terminare il task aggiorno la coppia <username,Userdata> con un oggetto aggiornato con i dati più recenti
                 hashMap.replace(username,user);
             }
