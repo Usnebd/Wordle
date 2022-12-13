@@ -18,7 +18,7 @@ public class WordleServer implements Runnable{
         try {
             ConcurrentHashMap<String, UserData> hashMap = new ConcurrentHashMap<String, UserData>(); //struttura dati concorrente in cui verranno salvate coppie (username,Oggetto Userdata)
             Random random = new Random();                               //oggetto che mi serve per generare numeri random(servirà più in avanti)
-            JsonElement fileElement = JsonParser.parseReader(new FileReader("src\\config.json"));          //apro il file config.json
+            JsonElement fileElement = JsonParser.parseReader(new FileReader("config.json"));          //apro il file config.json
             JsonObject fileObject = fileElement.getAsJsonObject();
             //estraggo il dati di configurazione dal file Json
             int secretWordRate = fileObject.get("secretWordRate").getAsInt();
