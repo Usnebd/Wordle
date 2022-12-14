@@ -141,6 +141,7 @@ public class WordleServer implements Runnable{
                 writer.name("gamesWon").value(user.getGamesWon());
                 writer.name("guessDistribution").value(user.getGuessDistribution());
                 writer.endObject();                                     // }
+                it.remove();
             }
             writer.endArray();                                          // ]
             writer.close();
